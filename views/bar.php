@@ -15,6 +15,9 @@ $brandSlug = isset($brand) && isset($brand['slug']) ? $brand['slug'] : ($user &&
 <?php endif; ?>
     <a href="<?= e(url('/b/' . $brandSlug . '/tablero')) ?>"<?= $nav === 'tablero' ? ' class="on" aria-current="page"' : '' ?>>Tablero</a>
     <a href="<?= e(url('/b/' . $brandSlug . '/calendario')) ?>"<?= $nav === 'calendario' ? ' class="on" aria-current="page"' : '' ?>>Calendario</a>
+<?php if ($isAgency): ?>
+    <a href="<?= e(url('/b/' . $brandSlug . '/insights')) ?>"<?= $nav === 'insights' ? ' class="on" aria-current="page"' : '' ?>>Insights</a>
+<?php endif; ?>
 <?php elseif ($isAgency): ?>
     <a href="<?= e(url('/agencia')) ?>"<?= $nav === 'marcas' ? ' class="on" aria-current="page"' : '' ?>>Marcas</a>
     <a href="<?= e(url('/agencia/sistema')) ?>"<?= $nav === 'sistema' ? ' class="on" aria-current="page"' : '' ?>>Sistema</a>

@@ -6,6 +6,7 @@ require __DIR__ . '/app/auth.php';
 require __DIR__ . '/app/agency.php';
 require __DIR__ . '/app/brand.php';
 require __DIR__ . '/app/api.php';
+require __DIR__ . '/app/insights.php';
 
 $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
 if ($method === 'HEAD') {
@@ -47,6 +48,11 @@ $routes = [
     ['POST', "#^/b/$S/fotos/$ID/borrar$#",             'h_photo_delete'],
     ['GET',  "#^/b/$S/fotos/$ID$#",                    'h_photo_get'],
     ['GET',  "#^/b/$S/fotos/$ID/descargar$#",          'h_photo_download'],
+    ['GET',  "#^/b/$S/insights$#",                     'h_insights'],
+    ['POST', "#^/b/$S/insights/registro$#",            'h_insights_save'],
+    ['POST', "#^/b/$S/insights/$ID/borrar$#",          'h_insights_delete'],
+    ['GET',  "#^/api/$S/insights$#",                   'h_api_insights_get'],
+    ['POST', "#^/api/$S/insights$#",                   'h_api_insights_post'],
 ];
 
 foreach ($routes as $r) {
