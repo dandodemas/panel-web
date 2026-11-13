@@ -1,0 +1,5 @@
+config.php
+storage/*
+!storage/.htaccess
+!storage/.gitkeep
+install/datos.*.sql

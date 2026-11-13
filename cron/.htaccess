@@ -1,0 +1,8 @@
+# Fotos y logs privados: nunca accesibles desde el navegador (se sirven solo a través de PHP, con sesión).
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>
