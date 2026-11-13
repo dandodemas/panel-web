@@ -23,6 +23,7 @@
     <div class="row-actions">
       <a class="pill" href="<?= e(url('/b/' . $b['slug'] . '/tablero')) ?>">Tablero</a>
       <a class="pill" href="<?= e(url('/b/' . $b['slug'] . '/calendario')) ?>">Calendario</a>
+      <a class="pill" href="<?= e(url('/b/' . $b['slug'] . '/insights')) ?>">Insights</a>
       <button type="button" class="pill" data-copy-pass="<?= e($b['id']) ?>">Copiar contraseña</button>
       <a class="pill pill-solid" href="<?= e(url('/agencia/' . $b['id'])) ?>">Editar</a>
     </div>
