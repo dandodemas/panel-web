@@ -1,3 +1,4 @@
+<?php $scripts = ['agency.js']; ?>
 <section class="head">
   <div>
     <p class="eyebrow">Agencia</p>
@@ -9,7 +10,15 @@
   </form>
 </section>
 
-<?php if (!empty($flash)): ?>
+<?php if (!empty($flash) && isset($flash['t']) && $flash['t'] === 'token'): ?>
+<div class="msg msg-ok token-msg" role="status">
+  <p>Clave nueva. Cópiala ahora: no se vuelve a mostrar.</p>
+  <div class="token-row">
+    <code class="mono token-val"><?= e($flash['m']) ?></code>
+    <button type="button" class="cta" data-copy-text="<?= e($flash['m']) ?>">Copiar clave</button>
+  </div>
+</div>
+<?php elseif (!empty($flash)): ?>
 <p class="msg <?= (isset($flash['t']) && $flash['t'] === 'err') ? 'msg-err' : 'msg-ok' ?>" role="status"><?= e($flash['m']) ?></p>
 <?php endif; ?>
 
@@ -36,6 +45,7 @@ foreach ($labels as $k => $label): ?>
   </div>
 </div>
 
+<div class="cols-2 tools">
 <div class="card-box update-box">
   <h2 class="box-title">Actualizar el panel</h2>
   <p class="mute small">Descarga la última versión del código desde GitHub y la instala. No toca tus datos, fotos ni la configuración, y guarda antes una copia del código actual.</p>
@@ -61,4 +71,5 @@ foreach ($labels as $k => $label): ?>
     <button type="submit" name="accion" value="desactivar" class="link link-danger">Desactivar</button>
 <?php endif; ?>
   </form>
+</div>
 </div>

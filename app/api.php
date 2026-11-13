@@ -80,7 +80,7 @@ function h_agency_api_key()
     } else {
         $token = 'ddm_' . bin2hex(random_bytes(20));
         setting_set('api_token_hash', hash('sha256', $token));
-        flash_set('Clave nueva (cópiala ahora, no se vuelve a mostrar): ' . $token);
+        flash_set($token, 'token');
     }
     redirect('/agencia/sistema');
 }

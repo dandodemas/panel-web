@@ -376,6 +376,10 @@ html[data-theme="dark"] .theme .trk i{transform:translateX(18px);background:var(
   .ms-opt:active{background:var(--lime);color:var(--on-lime);border-color:var(--lime)}
 }
 
-.update-box{margin-top:20px;display:grid;gap:14px;max-width:560px}
+.tools{margin-top:20px;align-items:start}
+.update-box{display:grid;gap:14px}
 .badges{display:inline-flex;gap:3px;font-size:.85em;white-space:nowrap;vertical-align:baseline}
 .cfoot .ico{font-size:13px}
+.token-msg{display:grid;gap:10px}
+.token-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.token-val{background:var(--paper);color:var(--ink);border-radius:10px;padding:8px 12px;word-break:break-all;font-size:14px}

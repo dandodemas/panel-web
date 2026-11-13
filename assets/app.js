@@ -59,10 +59,7 @@
     }, 2600);
   };
 
-  DDM.copy = function (text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      return navigator.clipboard.writeText(text);
-    }
+  function copyFallback(text) {
     return new Promise(function (resolve, reject) {
       var ta = document.createElement('textarea');
       ta.value = text;
@@ -78,6 +75,16 @@
       }
       ta.remove();
     });
+  }
+
+  /** Copia al portapapeles; si el navegador no deja usar la API moderna, usa el método clásico. */
+  DDM.copy = function (text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).catch(function () {
+        return copyFallback(text);
+      });
+    }
+    return copyFallback(text);
   };
 
   /* ───── Tema ───── */
