@@ -40,8 +40,8 @@ $scripts = ['modal.js', 'board.js'];
         <h3 class="ctitle"><?= e($it['title']) ?></h3>
         <div class="cfoot">
           <span class="when"><?= e(fmt_short_date($it['date'])) ?> · <?= e($it['time']) ?></span>
-<?php if ($it['creativeUrl'] !== ''): ?><span class="ico" title="Tiene enlace a la creatividad">↗</span><?php endif; ?>
-<?php if (count($live) > 0): ?><span class="ico" title="Fotos"><?= count($live) ?> ▣</span><?php endif; ?>
+<?php if ($it['creativeUrl'] !== ''): ?><span class="ico" title="Tiene enlace a la creatividad" aria-label="Tiene enlace a la creatividad">🔗</span><?php endif; ?>
+<?php if (count($live) > 0): ?><span class="ico" title="Tiene fotos" aria-label="Tiene <?= count($live) ?> foto(s)">📷<?= count($live) > 1 ? ' ' . count($live) : '' ?></span><?php endif; ?>
           <button type="button" class="move-btn" data-move aria-label="Mover a otra columna">Mover ⇄</button>
         </div>
       </article>

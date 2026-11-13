@@ -32,8 +32,8 @@ $weekdays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     }));
 ?>
       <div class="chip t-<?= e($it['contentType']) ?>" role="button" tabindex="0" draggable="true" data-id="<?= e($it['id']) ?>">
-        <span class="chip-meta"><?= e($it['time']) ?> · <?= e($it['platform']) ?> · <?= e(TYPE_LABEL[$it['contentType']]) ?><?= $live ? ' · ' . $live . ' ▣' : '' ?></span>
-        <span class="chip-title"><?= e($it['title']) ?></span>
+        <span class="chip-meta"><?= e($it['time']) ?> · <?= e($it['platform']) ?> · <?= e(TYPE_LABEL[$it['contentType']]) ?></span>
+        <span class="chip-title"><?= e($it['title']) ?><?php if ($it['creativeUrl'] !== '' || $live): ?> <span class="badges"><?php if ($it['creativeUrl'] !== ''): ?><span title="Tiene enlace" aria-label="Tiene enlace">🔗</span><?php endif; ?><?php if ($live): ?><span title="Tiene fotos" aria-label="Tiene fotos">📷</span><?php endif; ?></span><?php endif; ?></span>
       </div>
 <?php endforeach; ?>
     </div>
@@ -68,7 +68,7 @@ $hasAny = false;
     <div class="ag-item t-<?= e($it['contentType']) ?>" role="button" tabindex="0" data-id="<?= e($it['id']) ?>">
       <div class="ag-text">
         <span class="chip-meta"><?= e($it['time']) ?> · <?= e(TYPE_LABEL[$it['contentType']]) ?> · <?= e($it['platform']) ?></span>
-        <span class="ag-title"><?= e($it['title']) ?></span>
+        <span class="ag-title"><?= e($it['title']) ?><?php if ($it['creativeUrl'] !== '' || $livePh): ?> <span class="badges"><?php if ($it['creativeUrl'] !== ''): ?><span title="Tiene enlace" aria-label="Tiene enlace">🔗</span><?php endif; ?><?php if ($livePh): ?><span title="Tiene fotos" aria-label="Tiene fotos">📷</span><?php endif; ?></span><?php endif; ?></span>
       </div>
 <?php if ($livePh): ?>
       <img class="ag-thumb" src="<?= e($livePh[0]['thumb']) ?>" alt="" loading="lazy">
