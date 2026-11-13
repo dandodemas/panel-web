@@ -461,3 +461,8 @@ html[data-theme="dark"] .chart-sentence strong.up{color:#7bd88f}
 .tip-link{font-size:13px;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .chart-bar{cursor:pointer}
 .chart-bar:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.range-row{display:flex;gap:14px 20px;align-items:center;flex-wrap:wrap}
+.range-form{display:flex;gap:8px;align-items:center;font-size:14px}
+.range-form label{display:flex;gap:6px;align-items:center;color:var(--mute)}
+.range-form input{width:70px;background:transparent;border:1px solid var(--rule2);border-radius:999px;padding:5px 12px;font-size:14px;color:var(--ink)}
+.range-form input:focus{outline:none;border-color:var(--ink)}

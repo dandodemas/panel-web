@@ -75,20 +75,19 @@ function h_insights($slug)
     // ── Gráfica elegible: métrica y periodo ──
     $metricDefs = [
         'seguidores' => ['Seguidores', 'snap', 'followers'],
-        'alcance' => ['Alcance (28 días)', 'snap', 'reach'],
-        'visualizaciones' => ['Visualizaciones (28 días)', 'snap', 'impressions'],
-        'interacciones' => ['Interacciones (28 días)', 'snap', 'interactions'],
-        'visitas' => ['Visitas al perfil (28 días)', 'snap', 'profile_visits'],
-        'p_inter' => ['Interacciones por publicación', 'post', 'inter'],
-        'p_likes' => ['Me gusta por publicación', 'post', 'likes'],
-        'p_coment' => ['Comentarios por publicación', 'post', 'comments'],
-        'p_vistas' => ['Visualizaciones por publicación', 'post', 'views'],
-        'p_guard' => ['Guardados por publicación', 'post', 'saves'],
-        'p_alcance' => ['Alcance por publicación', 'post', 'reach'],
+        'p_inter' => ['Interacciones', 'post', 'inter'],
+        'p_likes' => ['Me gusta', 'post', 'likes'],
+        'p_coment' => ['Comentarios', 'post', 'comments'],
+        'p_vistas' => ['Visualizaciones', 'post', 'views'],
+        'p_guard' => ['Guardados', 'post', 'saves'],
+        'p_alcance' => ['Alcance', 'post', 'reach'],
     ];
     $mKey = isset($_GET['m']) && isset($metricDefs[$_GET['m']]) ? $_GET['m'] : 'seguidores';
-    $rangeOpts = ['30' => '30 días', '90' => '90 días', '365' => '1 año', '0' => 'Todo'];
-    $rKey = isset($_GET['r']) && isset($rangeOpts[$_GET['r']]) ? $_GET['r'] : '90';
+    $rangeOpts = ['7' => '7 días', '30' => '30 días', '90' => '90 días', '365' => '1 año', '0' => 'Todo'];
+    $rKey = '90';
+    if (isset($_GET['r']) && preg_match('/^\d{1,4}$/', (string) $_GET['r'])) {
+        $rKey = (string) (int) $_GET['r'];
+    }
     $since = $rKey === '0' ? '0000-00-00' : date('Y-m-d', strtotime(madrid_today() . ' -' . (int) $rKey . ' days'));
     $def = $metricDefs[$mKey];
     $chartSeries = [];

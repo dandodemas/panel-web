@@ -59,11 +59,18 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
       <a class="pill<?= $k === $mKey ? ' pill-solid' : '' ?>" href="<?= e(url('/b/' . $slug . '/insights?m=' . $k . '&r=' . $rKey)) ?>"<?= $k === $mKey ? ' aria-current="true"' : '' ?>><?= e($d[0]) ?></a>
 <?php endforeach; ?>
     </nav>
-    <nav class="pills pills-range" aria-label="Periodo">
+    <div class="range-row">
+      <nav class="pills pills-range" aria-label="Periodo">
 <?php foreach ($rangeOpts as $k => $label): ?>
-      <a class="pill<?= (string) $k === (string) $rKey ? ' pill-solid' : '' ?>" href="<?= e(url('/b/' . $slug . '/insights?m=' . $mKey . '&r=' . $k)) ?>"><?= e($label) ?></a>
+        <a class="pill<?= (string) $k === (string) $rKey ? ' pill-solid' : '' ?>" href="<?= e(url('/b/' . $slug . '/insights?m=' . $mKey . '&r=' . $k)) ?>"><?= e($label) ?></a>
 <?php endforeach; ?>
-    </nav>
+      </nav>
+      <form method="get" action="<?= e(url('/b/' . $slug . '/insights')) ?>" class="range-form">
+        <input type="hidden" name="m" value="<?= e($mKey) ?>">
+        <label>Últimos <input type="number" name="r" min="1" max="3650" inputmode="numeric" value="<?= isset($rangeOpts[$rKey]) ? '' : e($rKey) ?>" placeholder="…" aria-label="Número de días"> días</label>
+        <button type="submit" class="pill">Ver</button>
+      </form>
+    </div>
   </div>
   <h2 class="box-title"><?= e($metricDefs[$mKey][0]) ?></h2>
 <?php if (count($chartSeries) > 1):
@@ -86,7 +93,7 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
   <?= insights_chart_html($chartSeries, $chartType, $metricDefs[$mKey][0]) ?>
 <?php if ($isPost): ?>
   <ul class="chart-legend"><?php foreach (['reel' => 'Reel', 'carousel' => 'Carrusel', 'image' => 'Imagen', 'video' => 'Vídeo'] as $k => $l): ?><li><i class="k-<?= $k ?>"></i><?= e($l) ?></li><?php endforeach; ?></ul>
-  <p class="mute small">Cada barra es una publicación. Pasa el ratón por encima para ver su fecha, formato y cifra.</p>
+  <p class="mute small">Cada barra es una publicación de ese periodo. Pasa el ratón por encima para ver su fecha, formato y cifra.</p>
 <?php else: ?>
   <p class="mute small">Pasa el ratón por un punto para ver el valor de ese día.</p>
 <?php endif; ?>
