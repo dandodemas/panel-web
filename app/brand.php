@@ -186,21 +186,6 @@ function h_photos_upload($slug, $id)
     json_response(['ok' => count($ok) > 0, 'photos' => $ok, 'errors' => $errors], count($ok) > 0 ? 200 : 422);
 }
 
-function h_photo_from_drive($slug, $id)
-{
-    list($u, $brand) = brand_context_api($slug);
-    require_csrf(true);
-    $item = item_find($brand['id'], $id);
-    if (!$item) {
-        json_error('No encontrado.', 404);
-    }
-    $r = photo_from_drive((string) $item['creative_url'], $brand['id'], $id, $slug);
-    if (!$r['ok']) {
-        json_error($r['error'], 422);
-    }
-    json_response(['ok' => true, 'photos' => [$r['photo']]]);
-}
-
 function h_photo_delete($slug, $pid)
 {
     list($u, $brand) = brand_context_api($slug);

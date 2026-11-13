@@ -40,7 +40,6 @@ $routes = [
     ['POST', "#^/b/$S/items/$ID/borrar$#",             'h_item_delete'],
     ['POST', "#^/b/$S/items/$ID/mover$#",              'h_item_move'],
     ['POST', "#^/b/$S/items/$ID/fotos$#",              'h_photos_upload'],
-    ['POST', "#^/b/$S/items/$ID/fotos/drive$#",        'h_photo_from_drive'],
     ['POST', "#^/b/$S/fotos/$ID/borrar$#",             'h_photo_delete'],
     ['GET',  "#^/b/$S/fotos/$ID$#",                    'h_photo_get'],
 ];
