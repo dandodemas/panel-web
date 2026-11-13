@@ -10,7 +10,7 @@
 </section>
 
 <?php if (!empty($flash)): ?>
-<p class="msg msg-ok" role="status"><?= e($flash['m']) ?></p>
+<p class="msg <?= (isset($flash['t']) && $flash['t'] === 'err') ? 'msg-err' : 'msg-ok' ?>" role="status"><?= e($flash['m']) ?></p>
 <?php endif; ?>
 
 <div class="cols-2">
@@ -34,4 +34,18 @@ foreach ($labels as $k => $label): ?>
     <p class="mute small">Las fotos caducan solas a los <?= (int) photo_days() ?> días. Además de la limpieza ocasional automática, puedes programar este comando a diario en hPanel → Avanzado → Cron jobs:</p>
     <p class="code"><?= e('php ' . PANEL_ROOT . '/cron/limpiar.php') ?></p>
   </div>
+</div>
+
+<div class="card-box update-box">
+  <h2 class="box-title">Actualizar el panel</h2>
+  <p class="mute small">Descarga la última versión del código desde GitHub y la instala. No toca tus datos, fotos ni la configuración, y guarda antes una copia del código actual.</p>
+  <dl class="kv">
+<?php foreach ($updateReq as $label => $ok): ?>
+    <dt><?= e($label) ?></dt><dd><?= $ok ? 'sí' : 'no' ?></dd>
+<?php endforeach; ?>
+  </dl>
+  <form method="post" action="<?= e(url('/agencia/sistema/actualizar')) ?>">
+    <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
+    <button type="submit" class="cta"<?= in_array(false, $updateReq, true) ? ' disabled' : '' ?>>Buscar e instalar actualización <span class="x" aria-hidden="true"></span></button>
+  </form>
 </div>

@@ -26,6 +26,7 @@ $routes = [
     ['POST', '#^/agencia/nueva$#',                     'h_agency_new_post'],
     ['GET',  '#^/agencia/sistema$#',                   'h_agency_system'],
     ['POST', '#^/agencia/sistema/limpiar$#',           'h_agency_cleanup'],
+    ['POST', '#^/agencia/sistema/actualizar$#',        'h_agency_update'],
     ['GET',  "#^/agencia/$ID$#",                       'h_agency_edit_get'],
     ['POST', "#^/agencia/$ID$#",                       'h_agency_edit_post'],
     ['POST', "#^/agencia/$ID/borrar$#",                'h_agency_delete'],

@@ -375,3 +375,5 @@ html[data-theme="dark"] .theme .trk i{transform:translateX(18px);background:var(
   .ms-opt[aria-current="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .ms-opt:active{background:var(--lime);color:var(--on-lime);border-color:var(--lime)}
 }
+
+.update-box{margin-top:20px;display:grid;gap:14px;max-width:560px}

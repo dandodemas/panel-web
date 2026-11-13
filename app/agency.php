@@ -206,8 +206,10 @@ function h_agency_system()
             'Próxima caducidad' => $photoRows['next_expiry'] ? substr($photoRows['next_expiry'], 0, 10) : '—',
             'Plazo de conservación' => photo_days() . ' días',
             'Última limpieza' => setting_get('last_cleanup', 'nunca'),
+            'Versión del código' => setting_get('code_version') ? substr(setting_get('code_version'), 0, 7) : 'inicial',
         ],
         'caps' => $caps,
+        'updateReq' => update_requirements(),
     ]);
 }
 
@@ -217,5 +219,23 @@ function h_agency_cleanup()
     require_csrf();
     $r = run_cleanup();
     flash_set('Limpieza hecha: ' . $r['deleted'] . ' foto(s) caducada(s) borrada(s), ' . human_bytes($r['freed']) . ' liberados.');
+    redirect('/agencia/sistema');
+}
+
+function h_agency_update()
+{
+    require_agency();
+    require_csrf();
+    try {
+        $r = update_apply();
+        if ($r['status'] === 'same') {
+            flash_set('Ya tienes la última versión (' . substr($r['sha'], 0, 7) . ').');
+        } else {
+            flash_set('Actualizado a la versión ' . substr($r['sha'], 0, 7) . ' (' . $r['files'] . ' archivos). Copia de seguridad: ' . $r['backup'] . '.');
+        }
+    } catch (Throwable $e) {
+        error_log('[panel] actualización: ' . $e->getMessage());
+        flash_set($e instanceof RuntimeException ? $e->getMessage() : 'No se pudo actualizar.', 'err');
+    }
     redirect('/agencia/sistema');
 }

@@ -22,6 +22,7 @@ require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/items.php';
 require_once __DIR__ . '/photos.php';
 require_once __DIR__ . '/cleanup.php';
+require_once __DIR__ . '/update.php';
 
 /* ───── Errores: nunca se muestran al visitante, van a un log privado ───── */
 if (cfg('debug')) {
