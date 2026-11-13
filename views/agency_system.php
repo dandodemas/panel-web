@@ -68,4 +68,23 @@ foreach ($labels as $k => $label): ?>
 <?php endif; ?>
   </form>
 </div>
+
+<div class="card-box update-box meta-box" id="meta">
+  <h2 class="box-title">Conexión con Meta (insights)</h2>
+  <p class="mute small">Permite leer los insights reales de Instagram (alcance, visualizaciones, guardados…) y rellenar la pestaña Insights de cada marca con un botón.</p>
+<?php if (!empty($metaConn)): ?>
+  <dl class="kv"><dt>Estado</dt><dd>conectado</dd><dt>Cuentas</dt><dd><?php foreach ($metaConn['pages'] as $pg): ?>@<?= e($pg['ig_username']) ?> <?php endforeach; ?></dd></dl>
+<?php endif; ?>
+  <form method="post" action="<?= e(url('/agencia/sistema/meta')) ?>" class="form">
+    <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
+    <label class="field"><span>Clave de acceso de Meta (la que genera el Explorador de la API Graph)</span><input type="password" name="token" autocomplete="off" required></label>
+    <label class="field"><span>Secreto de la app (Configuración → Información básica)</span><input type="password" name="secret" autocomplete="off" required></label>
+    <div class="actions">
+      <button type="submit" name="accion" value="conectar" class="cta"><?= !empty($metaConn) ? 'Volver a conectar' : 'Conectar' ?> <span class="x" aria-hidden="true"></span></button>
+<?php if (!empty($metaConn)): ?>
+      <button type="submit" name="accion" value="desconectar" class="link link-danger" formnovalidate>Desconectar</button>
+<?php endif; ?>
+    </div>
+  </form>
+</div>
 </div>

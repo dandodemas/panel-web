@@ -409,3 +409,7 @@ html[data-theme="dark"] .theme .trk i{transform:translateX(18px);background:var(
 .card-box .tbl th,.card-box .tbl td{padding-left:0}
 .inline-form{margin-top:14px;padding-top:14px;border-top:1px solid var(--rule)}
 @media (max-width:760px){.tbl{font-size:13px}.tbl th,.tbl td{padding:10px 10px}}
+.acct-box{margin-bottom:20px;max-width:520px;display:grid;gap:14px}
+.acct-line{margin:-12px 0 16px}
+.inline{display:inline}
+.inline .link{font-size:inherit}

@@ -83,6 +83,8 @@ function h_insights($slug)
         'best' => $best,
         'kinds' => $kinds,
         'today' => madrid_today(),
+        'metaConn' => meta_connection(),
+        'metaAcc' => meta_brand_account($bid),
     ]);
 }
 
@@ -146,4 +148,67 @@ function h_api_insights_get($slug)
         'snapshots' => db_all('SELECT day, platform, followers, following, posts, reach, impressions, interactions, profile_visits, source FROM insights_snapshots WHERE brand_id = ? ORDER BY day DESC LIMIT 60', [$brand['id']]),
         'posts' => db_all('SELECT post_ref, posted_at, kind, likes, comments, views, saves, shares, reach, item_id FROM insights_posts WHERE brand_id = ? ORDER BY posted_at DESC LIMIT 100', [$brand['id']]),
     ]);
+}
+
+/** POST /b/{marca}/insights/cuenta  (ig_id elegido entre las cuentas de la conexión) */
+function h_insights_account($slug)
+{
+    list($user, $brand) = insights_agency_brand($slug);
+    require_csrf();
+    $igId = isset($_POST['ig_id']) ? (string) $_POST['ig_id'] : '';
+    $conn = meta_connection();
+    $ok = false;
+    if ($conn) {
+        foreach ($conn['pages'] as $p) {
+            $ok = $ok || $p['ig_id'] === $igId;
+        }
+    }
+    if ($igId === '') {
+        db_exec('DELETE FROM settings WHERE k = ?', ['ig_' . $brand['id']]);
+        flash_set('Cuenta desvinculada.');
+    } elseif ($ok) {
+        setting_set('ig_' . $brand['id'], $igId);
+        flash_set('Cuenta vinculada. Ya puedes pulsar «Actualizar insights».');
+    } else {
+        flash_set('Esa cuenta no está en la conexión con Meta.', 'err');
+    }
+    redirect('/b/' . $slug . '/insights');
+}
+
+function h_insights_refresh($slug)
+{
+    list($user, $brand) = insights_agency_brand($slug);
+    require_csrf();
+    try {
+        flash_set(meta_refresh_brand($brand));
+    } catch (InvalidArgumentException $e) {
+        flash_set($e->getMessage(), 'err');
+    } catch (Throwable $e) {
+        error_log('[panel] meta: ' . $e->getMessage());
+        flash_set('Meta ha respondido con un error: ' . mb_substr($e->getMessage(), 0, 220), 'err');
+    }
+    redirect('/b/' . $slug . '/insights');
+}
+
+/** POST /agencia/sistema/meta  (accion = conectar | desconectar) */
+function h_agency_meta()
+{
+    require_agency();
+    require_csrf();
+    $action = isset($_POST['accion']) ? $_POST['accion'] : 'conectar';
+    if ($action === 'desconectar') {
+        db_exec('DELETE FROM settings WHERE k = ?', ['meta_conn']);
+        flash_set('Conexión con Meta eliminada.');
+    } else {
+        try {
+            $n = meta_connect(isset($_POST['token']) ? $_POST['token'] : '', isset($_POST['secret']) ? $_POST['secret'] : '');
+            flash_set('Conectado con Meta: ' . $n . ' cuenta(s) de Instagram encontradas.');
+        } catch (InvalidArgumentException $e) {
+            flash_set($e->getMessage(), 'err');
+        } catch (Throwable $e) {
+            error_log('[panel] meta connect: ' . $e->getMessage());
+            flash_set('Meta ha respondido con un error: ' . mb_substr($e->getMessage(), 0, 220), 'err');
+        }
+    }
+    redirect('/agencia/sistema');
 }

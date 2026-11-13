@@ -24,6 +24,7 @@ require_once __DIR__ . '/photos.php';
 require_once __DIR__ . '/cleanup.php';
 require_once __DIR__ . '/update.php';
 require_once __DIR__ . '/insights.php';
+require_once __DIR__ . '/meta.php';
 
 /* ───── Errores: nunca se muestran al visitante, van a un log privado ───── */
 if (cfg('debug')) {

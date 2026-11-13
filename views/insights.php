@@ -7,7 +7,36 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
     <p class="eyebrow">Solo agencia · no lo ve el cliente</p>
     <h1 class="display"><?= e($brand['name']) ?> <em>insights</em></h1>
   </div>
+  <div class="head-actions">
+<?php if ($metaAcc): ?>
+    <form method="post" action="<?= e(url('/b/' . $slug . '/insights/actualizar')) ?>">
+      <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
+      <button type="submit" class="cta">Actualizar insights <span class="x" aria-hidden="true"></span></button>
+    </form>
+<?php elseif (!$metaConn): ?>
+    <a class="cta cta-ghost" href="<?= e(url('/agencia/sistema')) ?>">Conectar con Meta</a>
+<?php endif; ?>
+  </div>
 </section>
+
+<?php if ($metaConn && !$metaAcc): ?>
+<form method="post" action="<?= e(url('/b/' . $slug . '/insights/cuenta')) ?>" class="card-box acct-box">
+  <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
+  <label class="field"><span>Cuenta de Instagram de esta marca</span>
+    <select name="ig_id" required>
+      <option value="">Elige una cuenta…</option>
+<?php foreach ($metaConn['pages'] as $pg): ?>
+      <option value="<?= e($pg['ig_id']) ?>">@<?= e($pg['ig_username']) ?> · <?= e($pg['name']) ?></option>
+<?php endforeach; ?>
+    </select>
+  </label>
+  <div class="actions"><button type="submit" class="cta">Vincular cuenta <span class="x" aria-hidden="true"></span></button></div>
+</form>
+<?php endif; ?>
+
+<?php if ($metaAcc): ?>
+<p class="mute small acct-line">Conectado a @<?= e($metaAcc['ig_username']) ?> · <form method="post" action="<?= e(url('/b/' . $slug . '/insights/cuenta')) ?>" class="inline"><input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>"><input type="hidden" name="ig_id" value=""><button type="submit" class="link">cambiar cuenta</button></form></p>
+<?php endif; ?>
 
 <?php if (!empty($flash)): ?>
 <p class="msg <?= (isset($flash['t']) && $flash['t'] === 'err') ? 'msg-err' : 'msg-ok' ?>" role="status"><?= e($flash['m']) ?></p>
