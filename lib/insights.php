@@ -43,6 +43,11 @@ function insights_ensure()
         captured_at VARCHAR(19) NOT NULL,
         UNIQUE (brand_id, post_ref)
     )');
+    try {
+        db()->exec('ALTER TABLE insights_posts ADD COLUMN thumb VARCHAR(120) NULL');
+    } catch (Throwable $e) {
+        // ya existe
+    }
     $done = true;
 }
 
@@ -147,26 +152,126 @@ function insights_post_save($brandId, $p)
     return 'created';
 }
 
-/** Gráfica de línea (SVG sin JavaScript) de una serie [['day' => 'AAAA-MM-DD', 'v' => n], …]. */
-function insights_chart_svg($series, $label = 'Evolución')
+function insights_num($n)
+{
+    return number_format((int) $n, 0, ',', '.');
+}
+
+function insights_short($n)
+{
+    $n = (int) $n;
+    if ($n >= 10000) {
+        return rtrim(rtrim(number_format($n / 1000, 1, ',', ''), '0'), ',') . ' mil';
+    }
+    return insights_num($n);
+}
+
+function insights_kind_label($k)
+{
+    $m = ['reel' => 'Reel', 'video' => 'Vídeo', 'story' => 'Historia', 'carousel' => 'Carrusel', 'carrusel' => 'Carrusel', 'image' => 'Imagen', 'post' => 'Publicación'];
+    return isset($m[$k]) ? $m[$k] : ($k ?: 'Publicación');
+}
+
+/** Gráfica clara y sin JavaScript. $series = [['day','v', opcional 'kind','title'], …]. $type: 'line' (evolución) o 'bars' (una barra por publicación). */
+function insights_chart_html($series, $type, $label)
 {
     $n = count($series);
     if ($n < 2) {
         return '';
     }
-    $w = 640; $h = 220; $pad = 12;
+    $w = 640; $h = 240; $padX = 14; $padT = 14; $padB = 10;
     $vals = array_column($series, 'v');
-    $min = min($vals); $max = max($vals);
-    if ($max === $min) { $max = $min + 1; }
-    $pts = [];
-    foreach ($series as $i => $s) {
-        $x = $pad + ($w - 2 * $pad) * $i / ($n - 1);
-        $y = $h - $pad - ($h - 2 * $pad) * ($s['v'] - $min) / ($max - $min);
-        $pts[] = round($x, 1) . ',' . round($y, 1);
+    $max = max($vals); $min = $type === 'bars' ? 0 : min($vals);
+    if ($type === 'line') {
+        $span = max(1, $max - $min);
+        $min = max(0, $min - $span * 0.15);
+        $max = $max + $span * 0.15;
     }
-    $svg = '<svg class="chart" viewBox="0 0 ' . $w . ' ' . $h . '" role="img" aria-label="' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '">';
-    $svg .= '<polyline class="chart-line" fill="none" points="' . implode(' ', $pts) . '"/>';
-    $last = explode(',', end($pts));
-    $svg .= '<circle class="chart-dot" cx="' . $last[0] . '" cy="' . $last[1] . '" r="4"/></svg>';
-    return $svg;
+    if ($max <= $min) { $max = $min + 1; }
+    $innerH = $h - $padT - $padB;
+    $yOf = function ($v) use ($min, $max, $padT, $innerH) {
+        return $padT + $innerH - $innerH * ($v - $min) / ($max - $min);
+    };
+    $e = function ($t) { return htmlspecialchars((string) $t, ENT_QUOTES, 'UTF-8'); };
+
+    $svg = '<svg class="chart" viewBox="0 0 ' . $w . ' ' . $h . '" role="img" aria-label="' . $e($label) . '">';
+    foreach ([0, 0.5, 1] as $g) {
+        $y = round($padT + $innerH * $g, 1);
+        $svg .= '<line class="chart-grid" x1="0" x2="' . $w . '" y1="' . $y . '" y2="' . $y . '"/>';
+    }
+    if ($type === 'bars') {
+        $slot = ($w - 2 * $padX) / $n;
+        $bw = min(46, max(6, $slot * 0.7));
+        foreach ($series as $i => $p) {
+            $x = $padX + $slot * $i + ($slot - $bw) / 2;
+            $y = $yOf($p['v']);
+            $kind = isset($p['kind']) && $p['kind'] ? preg_replace('/[^a-z]/', '', $p['kind']) : 'otro';
+            $tip = fmt_short_date($p['day']) . ' · ' . insights_kind_label($p['kind'] ?? '') . ' · ' . insights_num($p['v']);
+            $data = ' data-day="' . $e(fmt_short_date($p['day'])) . '" data-time="' . $e($p['time'] ?? '') . '" data-kind="' . $e(insights_kind_label($p['kind'] ?? '')) . '" data-value="' . $e(insights_num($p['v'])) . '" data-title="' . $e($p['title'] ?? '') . '" data-caption="' . $e(mb_substr((string) ($p['caption'] ?? ''), 0, 160)) . '" data-thumb="' . $e($p['thumb'] ?? '') . '" data-link="' . $e($p['link'] ?? '') . '" data-stats="' . $e(json_encode($p['stats'] ?? new stdClass())) . '" tabindex="0"';
+            $svg .= '<rect class="chart-bar k-' . $kind . '"' . $data . ' x="' . round($x, 1) . '" y="' . round($y, 1) . '" width="' . round($bw, 1) . '" height="' . round(max(1, $padT + $innerH - $y), 1) . '" rx="3"><title>' . $e($tip) . '</title></rect>';
+        }
+    } else {
+        $pts = [];
+        foreach ($series as $i => $p) {
+            $pts[] = [round($padX + ($w - 2 * $padX) * $i / ($n - 1), 1), round($yOf($p['v']), 1)];
+        }
+        $line = implode(' ', array_map(function ($q) { return $q[0] . ',' . $q[1]; }, $pts));
+        $base = round($padT + $innerH, 1);
+        $svg .= '<polygon class="chart-area" points="' . $pts[0][0] . ',' . $base . ' ' . $line . ' ' . end($pts)[0] . ',' . $base . '"/>';
+        $svg .= '<polyline class="chart-line" fill="none" points="' . $line . '"/>';
+        $step = max(1, (int) ceil($n / 40));
+        foreach ($pts as $i => $q) {
+            $isLast = $i === $n - 1;
+            if ($isLast || $i % $step === 0) {
+                $tip = fmt_short_date($series[$i]['day']) . ' · ' . insights_num($series[$i]['v']);
+                $svg .= '<circle class="chart-dot' . ($isLast ? ' last' : '') . '" cx="' . $q[0] . '" cy="' . $q[1] . '" r="' . ($isLast ? 6 : 3.5) . '"><title>' . $e($tip) . '</title></circle>';
+            }
+        }
+    }
+    $svg .= '</svg>';
+
+    $yl = '<div class="chart-y" aria-hidden="true"><span>' . $e(insights_short($max)) . '</span><span>' . $e(insights_short(($max + $min) / 2)) . '</span><span>' . $e(insights_short($min)) . '</span></div>';
+    $mid = $series[(int) floor(($n - 1) / 2)]['day'];
+    $xl = '<div class="chart-x" aria-hidden="true"><span>' . $e(fmt_short_date($series[0]['day'])) . '</span><span>' . $e(fmt_short_date($mid)) . '</span><span>' . $e(fmt_short_date(end($series)['day'])) . '</span></div>';
+    return '<div class="chart-wrap">' . $yl . '<div class="chart-plot">' . $svg . $xl . '</div></div>';
+}
+
+
+/** Descarga una imagen de Instagram/Facebook, la reduce y la guarda en storage/insights/{marca}/. Devuelve la ruta relativa o null. */
+function insights_thumb_store($brandId, $postId, $url)
+{
+    if (!function_exists('curl_init') || !function_exists('imagecreatefromstring') || !preg_match('#^https://[^/]*(cdninstagram\.com|fbcdn\.net|facebook\.com)/#i', (string) $url)) {
+        return null;
+    }
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_FOLLOWLOCATION => false, CURLOPT_SSL_VERIFYPEER => true, CURLOPT_MAXFILESIZE => 6 * 1024 * 1024]);
+    $data = curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($data === false || $code !== 200 || strlen($data) > 6 * 1024 * 1024) {
+        return null;
+    }
+    $img = @imagecreatefromstring($data);
+    if (!$img) {
+        return null;
+    }
+    $small = photo_resized($img, 360);
+    $enc = photo_encoder();
+    $storage = rtrim((string) cfg('storage', PANEL_ROOT . '/storage'), '/');
+    $dir = $storage . '/insights/' . $brandId;
+    if (!is_dir($dir) && !@mkdir($dir, 0750, true)) {
+        return null;
+    }
+    $rel = $brandId . '/' . $postId . '.' . $enc['ext'];
+    if (!photo_write($small, $enc, $storage . '/insights/' . $rel)) {
+        return null;
+    }
+    return $rel;
+}
+
+function insights_thumb_path($rel)
+{
+    $storage = rtrim((string) cfg('storage', PANEL_ROOT . '/storage'), '/');
+    $p = $storage . '/insights/' . $rel;
+    return (preg_match('#^[a-z0-9]+/[a-z0-9]+\.(webp|jpg|png)$#', (string) $rel) && is_file($p)) ? $p : null;
 }

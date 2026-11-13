@@ -208,8 +208,9 @@ function meta_refresh_brand($brand)
     $snap['notes'] = implode(' · ', $notes);
     insights_snapshot_save($brand['id'], $snap, 'meta');
 
-    $media = meta_get($ig . '/media', ['fields' => 'id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count', 'limit' => 30], $t);
+    $media = meta_get($ig . '/media', ['fields' => 'id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count,media_url,thumbnail_url', 'limit' => 30], $t);
     $n = 0;
+    $thumbs = 0;
     foreach (isset($media['data']) ? $media['data'] : [] as $m) {
         $ins = meta_media_insights($m['id'], $t);
         $posted = isset($m['timestamp']) ? (new DateTime($m['timestamp']))->setTimezone(new DateTimeZone('Europe/Madrid'))->format('Y-m-d\TH:i:s') : null;
@@ -221,6 +222,16 @@ function meta_refresh_brand($brand)
             'shares' => isset($ins['shares']) ? $ins['shares'] : null, 'reach' => isset($ins['reach']) ? $ins['reach'] : null,
         ]);
         $n++;
+        $ref = isset($m['permalink']) ? $m['permalink'] : $m['id'];
+        $row = db_one('SELECT id, thumb FROM insights_posts WHERE brand_id = ? AND post_ref = ?', [$brand['id'], mb_substr($ref, 0, 190)]);
+        if ($row && empty($row['thumb']) && $thumbs < 30) {
+            $img = !empty($m['thumbnail_url']) ? $m['thumbnail_url'] : (isset($m['media_type']) && $m['media_type'] !== 'VIDEO' && !empty($m['media_url']) ? $m['media_url'] : null);
+            $rel = $img ? insights_thumb_store($brand['id'], $row['id'], $img) : null;
+            if ($rel) {
+                db_exec('UPDATE insights_posts SET thumb = ? WHERE id = ?', [$rel, $row['id']]);
+                $thumbs++;
+            }
+        }
     }
     return 'Actualizado: ' . number_format((int) $snap['followers'], 0, ',', '.') . ' seguidores y ' . $n . ' publicaciones.';
 }

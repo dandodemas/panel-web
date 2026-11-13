@@ -111,7 +111,13 @@ function h_insights($slug)
                 }
                 $v = (int) $p[$def[2]];
             }
-            $chartSeries[] = ['day' => substr($p['posted_at'], 0, 10), 'v' => $v];
+            $chartSeries[] = [
+                'day' => substr($p['posted_at'], 0, 10), 'v' => $v, 'kind' => $p['kind'], 'title' => $p['item_title'] ?: '',
+                'caption' => $p['caption'], 'link' => preg_match('#^https://#', $p['post_ref']) ? $p['post_ref'] : '',
+                'time' => substr($p['posted_at'], 11, 5),
+                'thumb' => !empty($p['thumb']) ? url('/b/' . $slug . '/insights/miniatura/' . $p['id']) : '',
+                'stats' => ['likes' => $p['likes'], 'comments' => $p['comments'], 'views' => $p['views'], 'saves' => $p['saves'], 'shares' => $p['shares'], 'reach' => $p['reach']],
+            ];
         }
     }
 
@@ -129,6 +135,7 @@ function h_insights($slug)
         'mKey' => $mKey,
         'rKey' => $rKey,
         'chartSeries' => $chartSeries,
+        'chartType' => $def[1] === 'post' ? 'bars' : 'line',
         'latest' => $latest,
         'delta' => $delta,
         'posts' => array_slice($posts, 0, 60),
@@ -266,4 +273,21 @@ function h_agency_meta()
         }
     }
     redirect('/agencia/sistema');
+}
+
+function h_insights_thumb($slug, $id)
+{
+    list($user, $brand) = insights_agency_brand($slug);
+    $row = db_one('SELECT thumb FROM insights_posts WHERE id = ? AND brand_id = ?', [$id, $brand['id']]);
+    $path = $row ? insights_thumb_path($row['thumb']) : null;
+    if (!$path) {
+        http_response_code(404);
+        exit;
+    }
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    header('Content-Type: ' . ($ext === 'webp' ? 'image/webp' : ($ext === 'png' ? 'image/png' : 'image/jpeg')));
+    header('Cache-Control: private, max-age=604800');
+    header('Content-Length: ' . filesize($path));
+    readfile($path);
+    exit;
 }

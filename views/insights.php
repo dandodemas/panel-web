@@ -1,3 +1,4 @@
+<?php $scripts = ['insights.js']; ?>
 <?php
 $kindLabel = ['reel' => 'Reel', 'video' => 'Vídeo', 'story' => 'Historia', 'carousel' => 'Carrusel', 'carrusel' => 'Carrusel', 'image' => 'Imagen', 'post' => 'Publicación', 'otro' => 'Otro'];
 $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, ',', '.'); };
@@ -69,10 +70,26 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
     $vals = array_column($chartSeries, 'v');
     $first = $vals[0]; $lastv = end($vals); $diff = $lastv - $first;
     $pct = $first > 0 ? round($diff / $first * 100) : null;
+    $isPost = $chartType === 'bars';
+    $bestIdx = array_search(max($vals), $vals);
+    $bestP = $chartSeries[$bestIdx];
+    $avg = array_sum($vals) / count($vals);
+    $name = mb_strtolower($metricDefs[$mKey][0]);
 ?>
-  <p class="chart-trend <?= $diff >= 0 ? 'up' : 'down' ?>"><?= $diff >= 0 ? '▲' : '▼' ?> <?= e(($diff >= 0 ? '+' : '') . $fmt($diff)) ?><?= $pct !== null ? ' (' . ($pct >= 0 ? '+' : '') . $pct . ' %)' : '' ?> <span class="mute">en este periodo</span></p>
-  <?= insights_chart_svg($chartSeries, $metricDefs[$mKey][0]) ?>
-  <div class="chart-axis"><span><?= e(fmt_short_date($chartSeries[0]['day'])) ?> · <?= e($fmt($first)) ?></span><span>máx. <?= e($fmt(max($vals))) ?> · mín. <?= e($fmt(min($vals))) ?></span><span><?= e(fmt_short_date(end($chartSeries)['day'])) ?> · <?= e($fmt($lastv)) ?></span></div>
+  <p class="chart-sentence">
+<?php if ($isPost): ?>
+    En este periodo hay <strong><?= count($vals) ?> publicaciones</strong> con una media de <strong><?= e(insights_num($avg)) ?></strong>.
+    La mejor fue <strong><?= e(mb_strtolower(insights_kind_label($bestP['kind']))) ?> del <?= e(fmt_short_date($bestP['day'])) ?></strong> con <strong><?= e(insights_num(max($vals))) ?></strong>.
+<?php else: ?>
+    <?= $diff >= 0 ? 'Ha subido' : 'Ha bajado' ?> <strong class="<?= $diff >= 0 ? 'up' : 'down' ?>"><?= $diff >= 0 ? '▲' : '▼' ?> <?= e(insights_num(abs($diff))) ?><?= $pct !== null ? ' (' . ($pct >= 0 ? '+' : '') . $pct . ' %)' : '' ?></strong>
+    entre el <?= e(fmt_short_date($chartSeries[0]['day'])) ?> y el <?= e(fmt_short_date(end($chartSeries)['day'])) ?>: de <?= e(insights_num($first)) ?> a <strong><?= e(insights_num($lastv)) ?></strong>.<?php endif; ?></p>
+  <?= insights_chart_html($chartSeries, $chartType, $metricDefs[$mKey][0]) ?>
+<?php if ($isPost): ?>
+  <ul class="chart-legend"><?php foreach (['reel' => 'Reel', 'carousel' => 'Carrusel', 'image' => 'Imagen', 'video' => 'Vídeo'] as $k => $l): ?><li><i class="k-<?= $k ?>"></i><?= e($l) ?></li><?php endforeach; ?></ul>
+  <p class="mute small">Cada barra es una publicación. Pasa el ratón por encima para ver su fecha, formato y cifra.</p>
+<?php else: ?>
+  <p class="mute small">Pasa el ratón por un punto para ver el valor de ese día.</p>
+<?php endif; ?>
 <?php else: ?>
   <p class="mute">Aún no hay suficientes datos de esto en este periodo<?= strpos($mKey, 'p_') === 0 ? '' : ' (cada vez que pulses «Actualizar insights» se añade un punto)' ?>. Prueba con «Todo» u otra métrica.</p>
 <?php endif; ?>

@@ -52,6 +52,7 @@ $routes = [
     ['POST', "#^/b/$S/insights/registro$#",            'h_insights_save'],
     ['POST', "#^/b/$S/insights/cuenta$#",              'h_insights_account'],
     ['POST', "#^/b/$S/insights/actualizar$#",          'h_insights_refresh'],
+    ['GET',  "#^/b/$S/insights/miniatura/$ID$#",       'h_insights_thumb'],
     ['POST', '#^/agencia/sistema/meta$#',              'h_agency_meta'],
     ['POST', "#^/b/$S/insights/$ID/borrar$#",          'h_insights_delete'],
     ['GET',  "#^/api/$S/insights$#",                   'h_api_insights_get'],
