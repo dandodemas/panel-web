@@ -228,7 +228,7 @@ html[data-theme="dark"] .theme .trk i{transform:translateX(18px);background:var(
 .ph .ph-days{position:absolute;left:5px;bottom:5px;font-size:11px;background:rgba(14,14,14,.7);color:#F2F2F0;border-radius:999px;padding:0 7px}
 .ph.ph-expired{display:grid;place-items:center;text-align:center;font-size:12px;color:var(--mute);padding:6px}
 .ph.ph-up{display:grid;place-items:center;font-size:12px;color:var(--mute);text-align:center;padding:6px}
-.ph.ph-up i{position:absolute;left:0;bottom:0;height:3px;background:var(--ink);width:0;transition:width .2s}
+.ph.ph-up i{position:absolute;left:0;bottom:0;height:3px;background:var(--ink);width:100%;transform:scaleX(0);transform-origin:left;transition:transform .2s}
 .ph.ph-err{border-color:var(--danger);color:var(--danger)}
 .ph-add{display:inline-flex;align-items:center;gap:10px;justify-self:start;border:1px dashed var(--rule2);border-radius:999px;padding:9px 16px;font-size:14px;cursor:pointer;transition:border-color .3s,background .3s}
 .ph-add:hover,.ph-add.over{border-color:var(--ink);background:var(--k3)}

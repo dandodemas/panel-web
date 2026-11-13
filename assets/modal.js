@@ -110,7 +110,7 @@
       xhr.setRequestHeader('X-CSRF-Token', DDM.csrf());
       xhr.setRequestHeader('Accept', 'application/json');
       xhr.upload.onprogress = function (e) {
-        if (e.lengthComputable && bar) bar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+        if (e.lengthComputable && bar) bar.style.transform = 'scaleX(' + (e.loaded / e.total).toFixed(3) + ')';
       };
       xhr.onload = function () {
         var r;
