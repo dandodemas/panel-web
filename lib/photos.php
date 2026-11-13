@@ -176,6 +176,12 @@ function photo_store($tmpPath, $originalName, $brandId, $itemId, $slug)
         $outMime = $ext === 'jpg' ? 'image/jpeg' : 'image/' . $ext;
     }
 
+    // Se conserva también el archivo original tal cual se subió, para que se pueda descargar en su calidad.
+    $origExt = $type === IMAGETYPE_JPEG ? 'jpg' : ($type === IMAGETYPE_PNG ? 'png' : 'webp');
+    if (@copy($tmpPath, photo_dir() . '/' . $brandId . '/' . $id . '.orig.' . $origExt)) {
+        @chmod(photo_dir() . '/' . $brandId . '/' . $id . '.orig.' . $origExt, 0640);
+    }
+
     @chmod(photo_dir() . '/' . $mainRel, 0640);
     $size = (int) @filesize(photo_dir() . '/' . $mainRel);
     $now = now_utc();
@@ -198,6 +204,7 @@ function photo_public($r, $slug)
     return [
         'id' => $r['id'],
         'url' => $expired ? '' : url('/b/' . $slug . '/fotos/' . $r['id']),
+        'download' => $expired ? '' : url('/b/' . $slug . '/fotos/' . $r['id'] . '/descargar'),
         'thumb' => $expired ? '' : url('/b/' . $slug . '/fotos/' . $r['id'] . '?t=1'),
         'name' => (string) $r['original_name'],
         'expired' => $expired,
@@ -223,8 +230,19 @@ function photos_for_items($itemIds, $slug)
     return $out;
 }
 
+/** Ruta del archivo original conservado de una foto, o null si no existe (fotos antiguas). */
+function photo_original_path($row)
+{
+    $found = glob(photo_dir() . '/' . $row['brand_id'] . '/' . $row['id'] . '.orig.*');
+    return ($found && is_file($found[0])) ? $found[0] : null;
+}
+
 function photo_unlink_files($row)
 {
+    $orig = photo_original_path($row);
+    if ($orig) {
+        @unlink($orig);
+    }
     foreach (['file', 'thumb'] as $k) {
         if (!empty($row[$k])) {
             $path = photo_dir() . '/' . $row[$k];
@@ -279,5 +297,56 @@ function photo_stream($row, $thumb)
     header('Content-Length: ' . filesize($path));
     header('Content-Disposition: inline');
     readfile($path);
+    exit;
+}
+
+/** Descarga de la foto en su calidad original (o, en fotos antiguas, la guardada; los WebP se entregan como JPG). */
+function photo_download($row)
+{
+    if (!empty($row['expired_at'])) {
+        http_response_code(410);
+        exit;
+    }
+    $path = photo_original_path($row);
+    $mime = null;
+    if ($path === null) {
+        $path = photo_dir() . '/' . $row['file'];
+        $mime = $row['mime'];
+    }
+    if (!is_file($path)) {
+        http_response_code(404);
+        exit;
+    }
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $mimes = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
+    $mime = $mime ?: (isset($mimes[$ext]) ? $mimes[$ext] : 'application/octet-stream');
+    $base = pathinfo((string) $row['original_name'], PATHINFO_FILENAME);
+    $base = trim(preg_replace('/[^\p{L}\p{N}\-_. ]/u', '', $base));
+    if ($base === '') {
+        $base = 'foto-' . substr($row['id'], 0, 8);
+    }
+    $data = null;
+    if ($ext === 'webp' && function_exists('imagecreatefromwebp') && function_exists('imagejpeg')) {
+        // Instagram y la mayoría de apps no aceptan WebP: se entrega como JPG.
+        $img = @imagecreatefromwebp($path);
+        if ($img) {
+            ob_start();
+            imagejpeg($img, null, 95);
+            $data = ob_get_clean();
+            $ext = 'jpg';
+            $mime = 'image/jpeg';
+        }
+    }
+    $filename = $base . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+    header('Content-Type: ' . $mime);
+    header('Content-Disposition: attachment; filename="' . rawurlencode($filename) . '"; filename*=UTF-8\'\'' . rawurlencode($filename));
+    header('Cache-Control: private, no-store');
+    if ($data !== null) {
+        header('Content-Length: ' . strlen($data));
+        echo $data;
+    } else {
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+    }
     exit;
 }

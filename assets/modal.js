@@ -26,6 +26,7 @@
   var creativeOpen = document.getElementById('creative-open');
   var lightbox = document.getElementById('lightbox');
   var lightboxImg = document.getElementById('lightbox-img');
+  var lightboxDl = document.getElementById('lightbox-dl');
 
   var MAX_BYTES = 15 * 1024 * 1024;
   var ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
@@ -61,8 +62,16 @@
     img.loading = 'lazy';
     img.addEventListener('click', function () {
       lightboxImg.src = p.url;
+      if (lightboxDl) lightboxDl.href = p.download;
       lightbox.hidden = false;
     });
+    var dl = document.createElement('a');
+    dl.className = 'ph-dl';
+    dl.href = p.download;
+    dl.setAttribute('download', '');
+    dl.setAttribute('aria-label', 'Descargar foto');
+    dl.title = 'Descargar';
+    dl.textContent = '↓';
     var del = document.createElement('button');
     del.type = 'button';
     del.className = 'ph-del';
@@ -85,6 +94,7 @@
     days.title = 'Se borra sola el ' + p.expiresAt;
     t.appendChild(img);
     t.appendChild(del);
+    t.appendChild(dl);
     t.appendChild(days);
     return t;
   }

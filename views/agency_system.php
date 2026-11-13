@@ -4,10 +4,16 @@
     <p class="eyebrow">Agencia</p>
     <h1 class="display">Sistema</h1>
   </div>
-  <form method="post" action="<?= e(url('/agencia/sistema/limpiar')) ?>">
-    <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
-    <button type="submit" class="cta">Ejecutar limpieza ahora <span class="x" aria-hidden="true"></span></button>
-  </form>
+  <div class="head-actions">
+    <form method="post" action="<?= e(url('/agencia/sistema/actualizar')) ?>">
+      <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
+      <button type="submit" class="cta"<?= in_array(false, $updateReq, true) ? ' disabled' : '' ?>>Actualizar el panel <span class="x" aria-hidden="true"></span></button>
+    </form>
+    <form method="post" action="<?= e(url('/agencia/sistema/limpiar')) ?>">
+      <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
+      <button type="submit" class="cta cta-ghost">Ejecutar limpieza ahora <span class="x" aria-hidden="true"></span></button>
+    </form>
+  </div>
 </section>
 
 <?php if (!empty($flash) && isset($flash['t']) && $flash['t'] === 'token'): ?>
@@ -45,21 +51,11 @@ foreach ($labels as $k => $label): ?>
   </div>
 </div>
 
-<div class="cols-2 tools">
-<div class="card-box update-box">
-  <h2 class="box-title">Actualizar el panel</h2>
-  <p class="mute small">Descarga la última versión del código desde GitHub y la instala. No toca tus datos, fotos ni la configuración, y guarda antes una copia del código actual.</p>
-  <dl class="kv">
-<?php foreach ($updateReq as $label => $ok): ?>
-    <dt><?= e($label) ?></dt><dd><?= $ok ? 'sí' : 'no' ?></dd>
-<?php endforeach; ?>
-  </dl>
-  <form method="post" action="<?= e(url('/agencia/sistema/actualizar')) ?>">
-    <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
-    <button type="submit" class="cta"<?= in_array(false, $updateReq, true) ? ' disabled' : '' ?>>Buscar e instalar actualización <span class="x" aria-hidden="true"></span></button>
-  </form>
-</div>
+<?php if (in_array(false, $updateReq, true)): ?>
+<p class="msg msg-err">Este servidor no permite actualizar desde aquí: <?php foreach ($updateReq as $label => $ok) { if (!$ok) { echo e($label) . '. '; } } ?></p>
+<?php endif; ?>
 
+<div class="cols-2 tools">
 <div class="card-box update-box">
   <h2 class="box-title">Subida automática de fotos</h2>
   <p class="mute small">Permite que una conversación de Claude suba fotos a la pieza de cada día sin que tú hagas nada. Genera una clave, guárdala en el archivo <span class="mono">~/.dandodemas-panel-token</span> de tu Mac y listo. Solo se guarda su huella: si la pierdes, genera otra.</p>

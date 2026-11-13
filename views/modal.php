@@ -86,4 +86,5 @@
 <div class="lightbox" id="lightbox" hidden>
   <button type="button" class="x-close x-close-light" data-close-lightbox aria-label="Cerrar foto"></button>
   <img alt="" id="lightbox-img">
+  <a class="cta lightbox-dl" id="lightbox-dl" href="#" download>Descargar foto</a>
 </div>

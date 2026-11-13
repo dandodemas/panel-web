@@ -46,6 +46,7 @@ $routes = [
     ['POST', "#^/b/$S/items/$ID/fotos$#",              'h_photos_upload'],
     ['POST', "#^/b/$S/fotos/$ID/borrar$#",             'h_photo_delete'],
     ['GET',  "#^/b/$S/fotos/$ID$#",                    'h_photo_get'],
+    ['GET',  "#^/b/$S/fotos/$ID/descargar$#",          'h_photo_download'],
 ];
 
 foreach ($routes as $r) {

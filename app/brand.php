@@ -208,6 +208,17 @@ function h_photo_delete($slug, $pid)
     json_response(['ok' => true]);
 }
 
+function h_photo_download($slug, $pid)
+{
+    list($u, $brand) = brand_context_api($slug);
+    $row = db_one('SELECT * FROM photos WHERE id = ? AND brand_id = ?', [$pid, $brand['id']]);
+    if (!$row) {
+        http_response_code(404);
+        exit;
+    }
+    photo_download($row);
+}
+
 function h_photo_get($slug, $pid)
 {
     list($u, $brand) = brand_context_api($slug);
