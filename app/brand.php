@@ -154,6 +154,12 @@ function h_photos_upload($slug, $id)
 {
     list($u, $brand) = brand_context_api($slug);
     require_csrf(true);
+    photos_receive($brand, $slug, $id, false);
+}
+
+/** Recibe las fotos de $_FILES['photos'] para una pieza y responde en JSON. $skipRepeated evita duplicar un archivo con el mismo nombre. */
+function photos_receive($brand, $slug, $id, $skipRepeated)
+{
     if (!item_find($brand['id'], $id)) {
         json_error('No encontrado.', 404);
     }
@@ -167,6 +173,7 @@ function h_photos_upload($slug, $id)
 
     $ok = [];
     $errors = [];
+    $skipped = [];
     foreach ($names as $i => $name) {
         if ($errs[$i] !== UPLOAD_ERR_OK) {
             $errors[] = $name . ': ' . upload_error_message($errs[$i]);
@@ -176,6 +183,10 @@ function h_photos_upload($slug, $id)
             $errors[] = $name . ': archivo no válido.';
             continue;
         }
+        if ($skipRepeated && db_val('SELECT COUNT(*) FROM photos WHERE item_id = ? AND original_name = ? AND expired_at IS NULL', [$id, substr($name, 0, 200)])) {
+            $skipped[] = $name;
+            continue;
+        }
         $r = photo_store($tmps[$i], $name, $brand['id'], $id, $slug);
         if ($r['ok']) {
             $ok[] = $r['photo'];
@@ -183,7 +194,8 @@ function h_photos_upload($slug, $id)
             $errors[] = $name . ': ' . $r['error'];
         }
     }
-    json_response(['ok' => count($ok) > 0, 'photos' => $ok, 'errors' => $errors], count($ok) > 0 ? 200 : 422);
+    $good = count($ok) > 0 || (count($skipped) > 0 && !$errors);
+    json_response(['ok' => $good, 'photos' => $ok, 'skipped' => $skipped, 'errors' => $errors], $good ? 200 : 422);
 }
 
 function h_photo_delete($slug, $pid)

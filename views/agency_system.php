@@ -49,3 +49,16 @@ foreach ($labels as $k => $label): ?>
     <button type="submit" class="cta"<?= in_array(false, $updateReq, true) ? ' disabled' : '' ?>>Buscar e instalar actualización <span class="x" aria-hidden="true"></span></button>
   </form>
 </div>
+
+<div class="card-box update-box">
+  <h2 class="box-title">Subida automática de fotos</h2>
+  <p class="mute small">Permite que una conversación de Claude suba fotos a la pieza de cada día sin que tú hagas nada. Genera una clave, guárdala en el archivo <span class="mono">~/.dandodemas-panel-token</span> de tu Mac y listo. Solo se guarda su huella: si la pierdes, genera otra.</p>
+  <dl class="kv"><dt>Estado</dt><dd><?= $apiOn ? 'activada' : 'desactivada' ?></dd></dl>
+  <form method="post" action="<?= e(url('/agencia/sistema/clave-api')) ?>" class="actions">
+    <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
+    <button type="submit" name="accion" value="generar" class="cta"><?= $apiOn ? 'Generar clave nueva' : 'Activar y generar clave' ?> <span class="x" aria-hidden="true"></span></button>
+<?php if ($apiOn): ?>
+    <button type="submit" name="accion" value="desactivar" class="link link-danger">Desactivar</button>
+<?php endif; ?>
+  </form>
+</div>

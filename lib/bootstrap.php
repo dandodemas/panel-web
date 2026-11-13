@@ -90,7 +90,11 @@ if (PHP_SAPI !== 'cli') {
         'samesite' => 'Lax',
         'secure' => is_https(),
     ]);
-    session_start();
+    // Las llamadas de la API (/api/...) se autentican con clave, no con sesión: no crean cookies ni archivos de sesión.
+    $isApi = strpos(request_path(), '/api/') === 0;
+    if (!$isApi) {
+        session_start();
+    }
 }
 
 register_shutdown_function('maybe_cleanup');

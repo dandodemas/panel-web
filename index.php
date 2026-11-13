@@ -5,6 +5,7 @@ require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/app/auth.php';
 require __DIR__ . '/app/agency.php';
 require __DIR__ . '/app/brand.php';
+require __DIR__ . '/app/api.php';
 
 $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
 if ($method === 'HEAD') {
@@ -27,6 +28,9 @@ $routes = [
     ['GET',  '#^/agencia/sistema$#',                   'h_agency_system'],
     ['POST', '#^/agencia/sistema/limpiar$#',           'h_agency_cleanup'],
     ['POST', '#^/agencia/sistema/actualizar$#',        'h_agency_update'],
+    ['POST', '#^/agencia/sistema/clave-api$#',         'h_agency_api_key'],
+    ['GET',  "#^/api/$S/piezas$#",                    'h_api_items'],
+    ['POST', "#^/api/$S/piezas/$ID/fotos$#",           'h_api_photos'],
     ['GET',  "#^/agencia/$ID$#",                       'h_agency_edit_get'],
     ['POST', "#^/agencia/$ID$#",                       'h_agency_edit_post'],
     ['POST', "#^/agencia/$ID/borrar$#",                'h_agency_delete'],

@@ -210,6 +210,7 @@ function h_agency_system()
         ],
         'caps' => $caps,
         'updateReq' => update_requirements(),
+        'apiOn' => (bool) api_token_hash(),
     ]);
 }
 
