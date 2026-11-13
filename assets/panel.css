@@ -413,3 +413,9 @@ html[data-theme="dark"] .theme .trk i{transform:translateX(18px);background:var(
 .acct-line{margin:-12px 0 16px}
 .inline{display:inline}
 .inline .link{font-size:inherit}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin-bottom:20px}
+.charts .chart-box{margin-bottom:0}
+.chart-trend{font-size:15px;margin:-6px 0 8px}
+.chart-trend.up{color:#2e7d32}
+.chart-trend.down{color:var(--danger)}
+html[data-theme="dark"] .chart-trend.up{color:#7bd88f}

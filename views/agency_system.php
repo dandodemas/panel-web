@@ -79,6 +79,7 @@ foreach ($labels as $k => $label): ?>
     <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
     <label class="field"><span>Clave de acceso de Meta (la que genera el Explorador de la API Graph)</span><input type="password" name="token" autocomplete="off" required></label>
     <label class="field"><span>Secreto de la app (Configuración → Información básica)</span><input type="password" name="secret" autocomplete="off" required></label>
+    <label class="field"><span>Números de página de las marcas (uno por línea). Ya puestos: A'Napule y LaBuena</span><textarea name="page_ids" rows="3"><?= e(isset($metaPageIds) ? $metaPageIds : "220867863290002\n1391488477385569") ?></textarea></label>
     <div class="actions">
       <button type="submit" name="accion" value="conectar" class="cta"><?= !empty($metaConn) ? 'Volver a conectar' : 'Conectar' ?> <span class="x" aria-hidden="true"></span></button>
 <?php if (!empty($metaConn)): ?>

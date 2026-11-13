@@ -24,6 +24,19 @@ function h_insights($slug)
             $series[] = ['day' => $s['day'], 'v' => (int) $s['followers']];
         }
     }
+    $extra = ['reach' => 'Alcance (28 días)', 'impressions' => 'Visualizaciones (28 días)', 'interactions' => 'Interacciones (28 días)'];
+    $charts = [];
+    foreach ($extra as $col => $title) {
+        $ser = [];
+        foreach ($snaps as $sn) {
+            if ($sn[$col] !== null) {
+                $ser[] = ['day' => $sn['day'], 'v' => (int) $sn[$col]];
+            }
+        }
+        if (count($ser) > 1) {
+            $charts[] = ['title' => $title, 'series' => $ser];
+        }
+    }
     $latest = $series ? end($series) : null;
     $delta = null;
     if ($latest && count($series) > 1) {
@@ -62,6 +75,12 @@ function h_insights($slug)
             $best = ['inter' => $inter, 'post' => $p];
         }
     }
+    $postSeries = [];
+    foreach (array_reverse($posts) as $p) {
+        if ($p['posted_at'] && ($p['kind'] ?: '') !== 'story') {
+            $postSeries[] = ['day' => substr($p['posted_at'], 0, 10), 'v' => (int) $p['likes'] + (int) $p['comments'] + (int) $p['saves'] + (int) $p['shares']];
+        }
+    }
     uasort($kinds, function ($a, $b) {
         return ($b['inter'] / max(1, $b['n'])) <=> ($a['inter'] / max(1, $a['n']));
     });
@@ -75,6 +94,8 @@ function h_insights($slug)
         'flash' => flash_take(),
         'snaps' => array_reverse($snaps),
         'series' => $series,
+        'charts' => $charts,
+        'postSeries' => $postSeries,
         'latest' => $latest,
         'delta' => $delta,
         'posts' => array_slice($posts, 0, 60),
@@ -201,7 +222,8 @@ function h_agency_meta()
         flash_set('Conexión con Meta eliminada.');
     } else {
         try {
-            $n = meta_connect(isset($_POST['token']) ? $_POST['token'] : '', isset($_POST['secret']) ? $_POST['secret'] : '');
+            $ids = preg_split('/[\s,;]+/', isset($_POST['page_ids']) ? (string) $_POST['page_ids'] : '', -1, PREG_SPLIT_NO_EMPTY);
+            $n = meta_connect(isset($_POST['token']) ? $_POST['token'] : '', isset($_POST['secret']) ? $_POST['secret'] : '', $ids);
             flash_set('Conectado con Meta: ' . $n . ' cuenta(s) de Instagram encontradas.');
         } catch (InvalidArgumentException $e) {
             flash_set($e->getMessage(), 'err');

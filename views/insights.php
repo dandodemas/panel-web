@@ -51,12 +51,37 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
     <span class="stat-s"><?= $best ? e(($best['post']['item_title'] ?: ($best['post']['caption'] ? mb_substr($best['post']['caption'], 0, 40) : 'sin título'))) : '' ?></span></div>
 </div>
 
-<?php if (count($series) > 1): ?>
-<div class="card-box chart-box">
-  <h2 class="box-title">Evolución de seguidores</h2>
-  <?= insights_chart_svg($series) ?>
-  <p class="mute small"><?= e(fmt_short_date($series[0]['day'])) ?> → <?= e(fmt_short_date(end($series)['day'])) ?> · de <?= e($fmt($series[0]['v'])) ?> a <?= e($fmt(end($series)['v'])) ?></p>
+<?php
+$chartCards = [];
+if (count($series) > 1) {
+    $chartCards[] = ['title' => 'Seguidores', 'series' => $series, 'fmt' => true];
+}
+foreach ($charts as $c) {
+    $chartCards[] = ['title' => $c['title'], 'series' => $c['series']];
+}
+if (count($postSeries) > 1) {
+    $chartCards[] = ['title' => 'Interacciones por publicación (cada punto, una publicación)', 'series' => $postSeries];
+}
+?>
+<?php if ($chartCards): ?>
+<div class="charts">
+<?php foreach ($chartCards as $cc):
+    $vals = array_column($cc['series'], 'v');
+    $first = $vals[0];
+    $lastv = end($vals);
+    $diff = $lastv - $first;
+    $pct = $first > 0 ? round($diff / $first * 100) : null;
+?>
+  <div class="card-box chart-box">
+    <h2 class="box-title"><?= e($cc['title']) ?></h2>
+    <p class="chart-trend <?= $diff >= 0 ? 'up' : 'down' ?>"><?= $diff >= 0 ? '▲' : '▼' ?> <?= e(($diff >= 0 ? '+' : '') . $fmt($diff)) ?><?= $pct !== null ? ' (' . ($pct >= 0 ? '+' : '') . $pct . ' %)' : '' ?></p>
+    <?= insights_chart_svg($cc['series'], $cc['title']) ?>
+    <p class="mute small"><?= e(fmt_short_date($cc['series'][0]['day'])) ?> → <?= e(fmt_short_date(end($cc['series'])['day'])) ?> · de <?= e($fmt($first)) ?> a <?= e($fmt($lastv)) ?></p>
+  </div>
+<?php endforeach; ?>
 </div>
+<?php else: ?>
+<p class="mute small">Las gráficas aparecen cuando hay al menos dos registros o dos publicaciones medidas. Cada vez que pulses «Actualizar insights» se añade un punto nuevo.</p>
 <?php endif; ?>
 
 <div class="cols-2 tools">

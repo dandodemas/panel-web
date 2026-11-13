@@ -65,7 +65,7 @@ function meta_connection_save($conn)
 }
 
 /** Convierte una clave de usuario en una de larga duración y guarda las páginas con Instagram. Devuelve cuántas cuentas de Instagram hay. */
-function meta_connect($userToken, $appSecret)
+function meta_connect($userToken, $appSecret, $extraPageIds = [])
 {
     $userToken = trim($userToken);
     $appSecret = trim($appSecret);
@@ -87,6 +87,29 @@ function meta_connect($userToken, $appSecret)
                 'ig_id' => $p['instagram_business_account']['id'],
                 'ig_username' => isset($p['instagram_business_account']['username']) ? $p['instagram_business_account']['username'] : '',
             ];
+        }
+    }
+    // Páginas que no salen en «mis páginas» (están en un portfolio): se leen por su número.
+    $known = array_column($pages, 'id');
+    foreach ($extraPageIds as $pid) {
+        $pid = preg_replace('/\D/', '', (string) $pid);
+        if ($pid === '' || in_array($pid, $known, true)) {
+            continue;
+        }
+        try {
+            $pg = meta_get($pid, ['fields' => 'id,name,access_token,instagram_business_account{id,username}'], $ll['access_token']);
+        } catch (MetaApiError $e) {
+            continue;
+        }
+        if (!empty($pg['instagram_business_account']['id'])) {
+            $pages[] = [
+                'id' => $pg['id'], 'name' => $pg['name'],
+                // Si Meta no da clave de página se usa la de usuario (dura unos 60 días).
+                'token' => !empty($pg['access_token']) ? $pg['access_token'] : $ll['access_token'],
+                'ig_id' => $pg['instagram_business_account']['id'],
+                'ig_username' => isset($pg['instagram_business_account']['username']) ? $pg['instagram_business_account']['username'] : '',
+            ];
+            $known[] = $pid;
         }
     }
     if (!$pages) {
