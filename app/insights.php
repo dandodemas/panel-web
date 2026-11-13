@@ -24,19 +24,6 @@ function h_insights($slug)
             $series[] = ['day' => $s['day'], 'v' => (int) $s['followers']];
         }
     }
-    $extra = ['reach' => 'Alcance (28 días)', 'impressions' => 'Visualizaciones (28 días)', 'interactions' => 'Interacciones (28 días)'];
-    $charts = [];
-    foreach ($extra as $col => $title) {
-        $ser = [];
-        foreach ($snaps as $sn) {
-            if ($sn[$col] !== null) {
-                $ser[] = ['day' => $sn['day'], 'v' => (int) $sn[$col]];
-            }
-        }
-        if (count($ser) > 1) {
-            $charts[] = ['title' => $title, 'series' => $ser];
-        }
-    }
     $latest = $series ? end($series) : null;
     $delta = null;
     if ($latest && count($series) > 1) {
@@ -85,6 +72,49 @@ function h_insights($slug)
         return ($b['inter'] / max(1, $b['n'])) <=> ($a['inter'] / max(1, $a['n']));
     });
 
+    // ── Gráfica elegible: métrica y periodo ──
+    $metricDefs = [
+        'seguidores' => ['Seguidores', 'snap', 'followers'],
+        'alcance' => ['Alcance (28 días)', 'snap', 'reach'],
+        'visualizaciones' => ['Visualizaciones (28 días)', 'snap', 'impressions'],
+        'interacciones' => ['Interacciones (28 días)', 'snap', 'interactions'],
+        'visitas' => ['Visitas al perfil (28 días)', 'snap', 'profile_visits'],
+        'p_inter' => ['Interacciones por publicación', 'post', 'inter'],
+        'p_likes' => ['Me gusta por publicación', 'post', 'likes'],
+        'p_coment' => ['Comentarios por publicación', 'post', 'comments'],
+        'p_vistas' => ['Visualizaciones por publicación', 'post', 'views'],
+        'p_guard' => ['Guardados por publicación', 'post', 'saves'],
+        'p_alcance' => ['Alcance por publicación', 'post', 'reach'],
+    ];
+    $mKey = isset($_GET['m']) && isset($metricDefs[$_GET['m']]) ? $_GET['m'] : 'seguidores';
+    $rangeOpts = ['30' => '30 días', '90' => '90 días', '365' => '1 año', '0' => 'Todo'];
+    $rKey = isset($_GET['r']) && isset($rangeOpts[$_GET['r']]) ? $_GET['r'] : '90';
+    $since = $rKey === '0' ? '0000-00-00' : date('Y-m-d', strtotime(madrid_today() . ' -' . (int) $rKey . ' days'));
+    $def = $metricDefs[$mKey];
+    $chartSeries = [];
+    if ($def[1] === 'snap') {
+        foreach ($snaps as $sn) {
+            if ($sn[$def[2]] !== null && $sn['day'] >= $since) {
+                $chartSeries[] = ['day' => $sn['day'], 'v' => (int) $sn[$def[2]]];
+            }
+        }
+    } else {
+        foreach (array_reverse($posts) as $p) {
+            if (!$p['posted_at'] || ($p['kind'] ?: '') === 'story' || substr($p['posted_at'], 0, 10) < $since) {
+                continue;
+            }
+            if ($def[2] === 'inter') {
+                $v = (int) $p['likes'] + (int) $p['comments'] + (int) $p['saves'] + (int) $p['shares'];
+            } else {
+                if ($p[$def[2]] === null) {
+                    continue;
+                }
+                $v = (int) $p[$def[2]];
+            }
+            $chartSeries[] = ['day' => substr($p['posted_at'], 0, 10), 'v' => $v];
+        }
+    }
+
     render('insights', [
         'title' => $brand['name'] . ' · Insights',
         'user' => $user,
@@ -94,8 +124,11 @@ function h_insights($slug)
         'flash' => flash_take(),
         'snaps' => array_reverse($snaps),
         'series' => $series,
-        'charts' => $charts,
-        'postSeries' => $postSeries,
+        'metricDefs' => $metricDefs,
+        'rangeOpts' => $rangeOpts,
+        'mKey' => $mKey,
+        'rKey' => $rKey,
+        'chartSeries' => $chartSeries,
         'latest' => $latest,
         'delta' => $delta,
         'posts' => array_slice($posts, 0, 60),

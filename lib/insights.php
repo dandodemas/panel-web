@@ -154,7 +154,7 @@ function insights_chart_svg($series, $label = 'Evolución')
     if ($n < 2) {
         return '';
     }
-    $w = 640; $h = 160; $pad = 8;
+    $w = 640; $h = 220; $pad = 12;
     $vals = array_column($series, 'v');
     $min = min($vals); $max = max($vals);
     if ($max === $min) { $max = $min + 1; }
@@ -164,7 +164,7 @@ function insights_chart_svg($series, $label = 'Evolución')
         $y = $h - $pad - ($h - 2 * $pad) * ($s['v'] - $min) / ($max - $min);
         $pts[] = round($x, 1) . ',' . round($y, 1);
     }
-    $svg = '<svg class="chart" viewBox="0 0 ' . $w . ' ' . $h . '" role="img" aria-label="' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '" preserveAspectRatio="none">';
+    $svg = '<svg class="chart" viewBox="0 0 ' . $w . ' ' . $h . '" role="img" aria-label="' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '">';
     $svg .= '<polyline class="chart-line" fill="none" points="' . implode(' ', $pts) . '"/>';
     $last = explode(',', end($pts));
     $svg .= '<circle class="chart-dot" cx="' . $last[0] . '" cy="' . $last[1] . '" r="4"/></svg>';

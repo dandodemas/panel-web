@@ -51,38 +51,32 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
     <span class="stat-s"><?= $best ? e(($best['post']['item_title'] ?: ($best['post']['caption'] ? mb_substr($best['post']['caption'], 0, 40) : 'sin título'))) : '' ?></span></div>
 </div>
 
-<?php
-$chartCards = [];
-if (count($series) > 1) {
-    $chartCards[] = ['title' => 'Seguidores', 'series' => $series, 'fmt' => true];
-}
-foreach ($charts as $c) {
-    $chartCards[] = ['title' => $c['title'], 'series' => $c['series']];
-}
-if (count($postSeries) > 1) {
-    $chartCards[] = ['title' => 'Interacciones por publicación (cada punto, una publicación)', 'series' => $postSeries];
-}
-?>
-<?php if ($chartCards): ?>
-<div class="charts">
-<?php foreach ($chartCards as $cc):
-    $vals = array_column($cc['series'], 'v');
-    $first = $vals[0];
-    $lastv = end($vals);
-    $diff = $lastv - $first;
+<div class="card-box chart-main">
+  <div class="chart-controls">
+    <nav class="pills" aria-label="Qué ver">
+<?php foreach ($metricDefs as $k => $d): ?>
+      <a class="pill<?= $k === $mKey ? ' pill-solid' : '' ?>" href="<?= e(url('/b/' . $slug . '/insights?m=' . $k . '&r=' . $rKey)) ?>"<?= $k === $mKey ? ' aria-current="true"' : '' ?>><?= e($d[0]) ?></a>
+<?php endforeach; ?>
+    </nav>
+    <nav class="pills pills-range" aria-label="Periodo">
+<?php foreach ($rangeOpts as $k => $label): ?>
+      <a class="pill<?= (string) $k === (string) $rKey ? ' pill-solid' : '' ?>" href="<?= e(url('/b/' . $slug . '/insights?m=' . $mKey . '&r=' . $k)) ?>"><?= e($label) ?></a>
+<?php endforeach; ?>
+    </nav>
+  </div>
+  <h2 class="box-title"><?= e($metricDefs[$mKey][0]) ?></h2>
+<?php if (count($chartSeries) > 1):
+    $vals = array_column($chartSeries, 'v');
+    $first = $vals[0]; $lastv = end($vals); $diff = $lastv - $first;
     $pct = $first > 0 ? round($diff / $first * 100) : null;
 ?>
-  <div class="card-box chart-box">
-    <h2 class="box-title"><?= e($cc['title']) ?></h2>
-    <p class="chart-trend <?= $diff >= 0 ? 'up' : 'down' ?>"><?= $diff >= 0 ? '▲' : '▼' ?> <?= e(($diff >= 0 ? '+' : '') . $fmt($diff)) ?><?= $pct !== null ? ' (' . ($pct >= 0 ? '+' : '') . $pct . ' %)' : '' ?></p>
-    <?= insights_chart_svg($cc['series'], $cc['title']) ?>
-    <p class="mute small"><?= e(fmt_short_date($cc['series'][0]['day'])) ?> → <?= e(fmt_short_date(end($cc['series'])['day'])) ?> · de <?= e($fmt($first)) ?> a <?= e($fmt($lastv)) ?></p>
-  </div>
-<?php endforeach; ?>
-</div>
+  <p class="chart-trend <?= $diff >= 0 ? 'up' : 'down' ?>"><?= $diff >= 0 ? '▲' : '▼' ?> <?= e(($diff >= 0 ? '+' : '') . $fmt($diff)) ?><?= $pct !== null ? ' (' . ($pct >= 0 ? '+' : '') . $pct . ' %)' : '' ?> <span class="mute">en este periodo</span></p>
+  <?= insights_chart_svg($chartSeries, $metricDefs[$mKey][0]) ?>
+  <div class="chart-axis"><span><?= e(fmt_short_date($chartSeries[0]['day'])) ?> · <?= e($fmt($first)) ?></span><span>máx. <?= e($fmt(max($vals))) ?> · mín. <?= e($fmt(min($vals))) ?></span><span><?= e(fmt_short_date(end($chartSeries)['day'])) ?> · <?= e($fmt($lastv)) ?></span></div>
 <?php else: ?>
-<p class="mute small">Las gráficas aparecen cuando hay al menos dos registros o dos publicaciones medidas. Cada vez que pulses «Actualizar insights» se añade un punto nuevo.</p>
+  <p class="mute">Aún no hay suficientes datos de esto en este periodo<?= strpos($mKey, 'p_') === 0 ? '' : ' (cada vez que pulses «Actualizar insights» se añade un punto)' ?>. Prueba con «Todo» u otra métrica.</p>
 <?php endif; ?>
+</div>
 
 <div class="cols-2 tools">
   <div class="card-box">

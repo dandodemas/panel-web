@@ -397,7 +397,7 @@ html[data-theme="dark"] .theme .trk i{transform:translateX(18px);background:var(
 .stat-v{font-weight:400;font-size:clamp(2rem,4vw,3rem);letter-spacing:-.04em;line-height:1}
 .stat-s{font-size:13px;color:var(--mute)}
 .chart-box{margin-bottom:20px}
-.chart{display:block;width:100%;height:180px}
+.chart{display:block;width:100%;height:auto;overflow:visible}
 .chart-line{stroke:var(--ink);stroke-width:2;vector-effect:non-scaling-stroke}
 .chart-dot{fill:var(--lime);stroke:var(--ink);stroke-width:1.5}
 .section-title{margin:28px 0 12px}
@@ -419,3 +419,12 @@ html[data-theme="dark"] .theme .trk i{transform:translateX(18px);background:var(
 .chart-trend.up{color:#2e7d32}
 .chart-trend.down{color:var(--danger)}
 html[data-theme="dark"] .chart-trend.up{color:#7bd88f}
+.acct-line{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.acct-line .inline{display:inline-flex}
+.chart-main{margin-bottom:20px}
+.chart-controls{display:grid;gap:10px;margin-bottom:18px}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pills .pill{padding:6px 14px;font-size:14px}
+.pills-range .pill{font-size:13px;padding:4px 12px;opacity:.9}
+.chart-axis{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:8px}
+@media (max-width:760px){.pills{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 calc(var(--gutter) * -1);padding:0 var(--gutter)}.pills::-webkit-scrollbar{display:none}.pills .pill{flex:none;min-height:40px}}
