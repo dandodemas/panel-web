@@ -1,4 +1,4 @@
-<?php $scripts = ['insights.js']; ?>
+<?php $scripts = ['agency.js', 'insights.js']; ?>
 <?php
 $kindLabel = ['reel' => 'Reel', 'video' => 'Vídeo', 'story' => 'Historia', 'carousel' => 'Carrusel', 'carrusel' => 'Carrusel', 'image' => 'Imagen', 'post' => 'Publicación', 'otro' => 'Otro'];
 $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, ',', '.'); };
@@ -14,7 +14,9 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
       <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
       <button type="submit" class="cta">Actualizar insights <span class="x" aria-hidden="true"></span></button>
     </form>
-<?php elseif (!$metaConn): ?>
+<?php endif; ?>
+    <button type="button" class="cta cta-ghost" data-toast="Copiado: pégalo en la conversación con Claude y te lo analizo" data-copy-text="<?= e('Analiza los insights de ' . $brand['name'] . ' (marca ' . $slug . ' del panel) y guarda el análisis en el panel.') ?>">Pedir análisis a Claude</button>
+<?php if (!$metaAcc && !$metaConn): ?>
     <a class="cta cta-ghost" href="<?= e(url('/agencia/sistema')) ?>">Conectar con Meta</a>
 <?php endif; ?>
   </div>

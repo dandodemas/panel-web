@@ -38,7 +38,7 @@
     if ((t = e.target.closest('[data-copy-text]'))) {
       DDM.copy(t.getAttribute('data-copy-text')).then(
         function () {
-          DDM.toast('Copiado');
+          DDM.toast(t.getAttribute('data-toast') || 'Copiado');
         },
         function () {
           DDM.toast('No se ha podido copiar.');
