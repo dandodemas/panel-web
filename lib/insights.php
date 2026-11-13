@@ -43,6 +43,14 @@ function insights_ensure()
         captured_at VARCHAR(19) NOT NULL,
         UNIQUE (brand_id, post_ref)
     )');
+    db()->exec('CREATE TABLE IF NOT EXISTS insights_notes (
+        id VARCHAR(32) NOT NULL PRIMARY KEY,
+        brand_id VARCHAR(32) NOT NULL,
+        source VARCHAR(10) NOT NULL,
+        body TEXT NOT NULL,
+        sig VARCHAR(40) NULL,
+        created_at VARCHAR(19) NOT NULL
+    )');
     try {
         db()->exec('ALTER TABLE insights_posts ADD COLUMN thumb VARCHAR(120) NULL');
     } catch (Throwable $e) {
@@ -274,4 +282,134 @@ function insights_thumb_path($rel)
     $storage = rtrim((string) cfg('storage', PANEL_ROOT . '/storage'), '/');
     $p = $storage . '/insights/' . $rel;
     return (preg_match('#^[a-z0-9]+/[a-z0-9]+\.(webp|jpg|png)$#', (string) $rel) && is_file($p)) ? $p : null;
+}
+
+
+function insights_weekday_es($ts)
+{
+    $d = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
+    return $d[(int) date('w', $ts)];
+}
+
+/** «el reel», «el carrusel», «la imagen», «la publicación»… */
+function insights_kind_with_article($k)
+{
+    $label = mb_strtolower(insights_kind_label($k));
+    return (in_array($label, ['imagen', 'publicación', 'historia'], true) ? 'la ' : 'el ') . $label;
+}
+
+function insights_pct_es($x)
+{
+    return number_format(abs($x), 0, ',', '.');
+}
+
+/** Frases sobre lo notable que hay ahora mismo en los datos de la marca. Devuelve [] si no hay nada que destacar. */
+function insights_auto_bullets($brandId)
+{
+    insights_ensure();
+    $bullets = [];
+    $snaps = db_all('SELECT day, followers FROM insights_snapshots WHERE brand_id = ? AND followers IS NOT NULL ORDER BY day ASC', [$brandId]);
+    if (count($snaps) >= 2) {
+        $last = end($snaps);
+        $target = strtotime($last['day'] . ' -28 days');
+        $ref = null;
+        foreach ($snaps as $sn) {
+            if (strtotime($sn['day']) <= $target) {
+                $ref = $sn;
+            }
+        }
+        if (!$ref) {
+            $ref = $snaps[0];
+        }
+        $days = max(1, (int) round((strtotime($last['day']) - strtotime($ref['day'])) / 86400));
+        $diff = (int) $last['followers'] - (int) $ref['followers'];
+        $pct = $ref['followers'] > 0 ? $diff / $ref['followers'] * 100 : 0;
+        if ($days >= 3 && abs($pct) >= 1) {
+            $bullets[] = ($diff >= 0 ? 'Seguidores al alza: ' : 'Seguidores a la baja: ') . ($diff >= 0 ? '+' : '−') . insights_num(abs($diff)) . ' (' . ($pct >= 0 ? '+' : '−') . insights_pct_es($pct) . ' %) en ' . $days . ' días, de ' . insights_num($ref['followers']) . ' a ' . insights_num($last['followers']) . '.';
+        }
+    }
+
+    $rows = db_all('SELECT posted_at, kind, caption, likes, comments, saves, shares FROM insights_posts WHERE brand_id = ? AND posted_at IS NOT NULL ORDER BY posted_at DESC', [$brandId]);
+    $posts = [];
+    foreach ($rows as $r) {
+        if (($r['kind'] ?: '') === 'story') {
+            continue;
+        }
+        $r['inter'] = (int) $r['likes'] + (int) $r['comments'] + (int) $r['saves'] + (int) $r['shares'];
+        $r['ts'] = strtotime($r['posted_at'] . ' UTC');
+        $posts[] = $r;
+    }
+    $n = count($posts);
+    if ($n >= 6) {
+        $avg = array_sum(array_column($posts, 'inter')) / $n;
+        $recent = array_slice($posts, 0, 30);
+        $best = null;
+        foreach ($recent as $p) {
+            if (!$best || $p['inter'] > $best['inter']) {
+                $best = $p;
+            }
+        }
+        if ($best && $avg > 0 && $best['inter'] >= 1.8 * $avg && time() - $best['ts'] < 21 * 86400) {
+            $bullets[] = 'Destaca ' . insights_kind_with_article($best['kind']) . ' del ' . fmt_short_date(substr($best['posted_at'], 0, 10)) . ': ' . insights_num($best['inter']) . ' interacciones, ' . number_format($best['inter'] / $avg, 1, ',', '.') . ' veces la media (' . insights_num(round($avg)) . ').';
+        }
+    }
+    if ($n >= 10) {
+        $a = array_slice($posts, 0, 5);
+        $b = array_slice($posts, 5, 5);
+        $ma = array_sum(array_column($a, 'inter')) / 5;
+        $mb = array_sum(array_column($b, 'inter')) / 5;
+        if ($mb > 0 && abs($ma - $mb) / $mb >= 0.25) {
+            $ch = ($ma - $mb) / $mb * 100;
+            $bullets[] = 'Las últimas 5 publicaciones rinden un ' . insights_pct_es($ch) . ' % ' . ($ch >= 0 ? 'más' : 'menos') . ' que las 5 anteriores (' . insights_num(round($ma)) . ' frente a ' . insights_num(round($mb)) . ' interacciones de media).';
+        }
+    }
+    $kinds = [];
+    foreach ($posts as $p) {
+        $k = $p['kind'] ?: 'otro';
+        $kinds[$k][] = $p['inter'];
+    }
+    $kinds = array_filter($kinds, function ($v) { return count($v) >= 2; });
+    if (count($kinds) >= 2) {
+        $means = array_map(function ($v) { return array_sum($v) / count($v); }, $kinds);
+        arsort($means);
+        $names = array_keys($means);
+        $v = array_values($means);
+        if ($v[1] > 0 && $v[0] / $v[1] >= 1.3) {
+            $bullets[] = 'Tu mejor formato es ' . mb_strtolower(insights_kind_label($names[0])) . ': ' . insights_num(round($v[0])) . ' interacciones de media, un ' . insights_pct_es(($v[0] / $v[1] - 1) * 100) . ' % más que ' . insights_kind_with_article($names[1]) . '.';
+        }
+    }
+    if ($n >= 12) {
+        $by = [];
+        foreach ($posts as $p) {
+            $by[(int) date('w', $p['ts'])][] = $p['inter'];
+        }
+        $by = array_filter($by, function ($v) { return count($v) >= 2; });
+        $overall = array_sum(array_column($posts, 'inter')) / $n;
+        if ($by && $overall > 0) {
+            $m = array_map(function ($v) { return array_sum($v) / count($v); }, $by);
+            arsort($m);
+            $wd = array_key_first($m);
+            if ($m[$wd] >= 1.3 * $overall) {
+                $bullets[] = 'Las publicaciones de los ' . insights_weekday_es(strtotime('Sunday +' . $wd . ' days')) . ' funcionan mejor: ' . insights_num(round($m[$wd])) . ' interacciones de media frente a ' . insights_num(round($overall)) . ' en total.';
+            }
+        }
+    }
+    return $bullets;
+}
+
+/** Crea una nota automática nueva si hay algo notable y es distinto de la última. Devuelve true si se creó. */
+function insights_update_analysis($brandId)
+{
+    $bullets = insights_auto_bullets($brandId);
+    if (!$bullets) {
+        return false;
+    }
+    $body = implode("\n", $bullets);
+    $sig = md5(preg_replace('/[\d.,]+/', '#', $body) . count($bullets) . substr(now_utc(), 0, 10));
+    $last = db_one('SELECT sig, body FROM insights_notes WHERE brand_id = ? AND source = ? ORDER BY created_at DESC LIMIT 1', [$brandId, 'auto']);
+    if ($last && $last['body'] === $body) {
+        return false;
+    }
+    db_exec('INSERT INTO insights_notes (id, brand_id, source, body, sig, created_at) VALUES (?, ?, ?, ?, ?, ?)', [new_id(), $brandId, 'auto', $body, $sig, now_utc()]);
+    return true;
 }

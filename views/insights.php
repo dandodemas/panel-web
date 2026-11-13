@@ -103,6 +103,7 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
 </div>
 
 <div class="cols-2 tools">
+  <div class="stack">
   <div class="card-box">
     <h2 class="box-title">Qué formato funciona mejor</h2>
 <?php if ($kinds): ?>
@@ -117,6 +118,26 @@ $fmt = function ($n) { return $n === null ? '—' : number_format((int) $n, 0, '
 <?php else: ?>
     <p class="mute">Aún no hay publicaciones medidas. Pulsa «Actualizar insights» o súbelas desde la conversación de la marca.</p>
 <?php endif; ?>
+  </div>
+
+    <div class="card-box notes-box">
+      <h2 class="box-title">Resumen</h2>
+<?php if ($noteIa): ?>
+      <div class="note note-ia">
+        <p class="note-label">Análisis con IA · <?= e(fmt_short_date(substr($noteIa['created_at'], 0, 10))) ?></p>
+        <p><?= nl2br(e($noteIa['body'])) ?></p>
+      </div>
+<?php endif; ?>
+<?php if ($noteAuto): ?>
+      <div class="note">
+        <p class="note-label">Cambios notables · <?= e(fmt_short_date(substr($noteAuto['created_at'], 0, 10))) ?></p>
+        <ul class="note-list"><?php foreach (explode("\n", $noteAuto['body']) as $line): ?><li><?= e($line) ?></li><?php endforeach; ?></ul>
+      </div>
+<?php endif; ?>
+<?php if (!$noteIa && !$noteAuto): ?>
+      <p class="mute">Cuando haya cambios notables (seguidores, publicaciones que destacan, mejor formato…) aparecerá aquí un resumen. Pídeme «analiza los insights de <?= e($brand['name']) ?>» y añado un análisis con IA.</p>
+<?php endif; ?>
+    </div>
   </div>
 
   <div class="card-box" id="config">

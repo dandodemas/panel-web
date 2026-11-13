@@ -145,6 +145,8 @@ function h_insights($slug)
         'today' => madrid_today(),
         'metaConn' => meta_connection(),
         'metaAcc' => meta_brand_account($bid),
+        'noteAuto' => db_one('SELECT body, created_at FROM insights_notes WHERE brand_id = ? AND source = ? ORDER BY created_at DESC, sig DESC LIMIT 1', [$bid, 'auto']),
+        'noteIa' => db_one('SELECT body, created_at FROM insights_notes WHERE brand_id = ? AND source = ? ORDER BY created_at DESC LIMIT 1', [$bid, 'ia']),
     ]);
 }
 
@@ -194,7 +196,14 @@ function h_api_insights_post($slug)
             }
         }
     }
-    $out['ok'] = $out['snapshot'] || $out['posts']['created'] + $out['posts']['updated'] > 0;
+    if (!empty($in['analysis']) && is_string($in['analysis'])) {
+        db_exec('INSERT INTO insights_notes (id, brand_id, source, body, sig, created_at) VALUES (?, ?, ?, ?, ?, ?)', [new_id(), $brand['id'], 'ia', mb_substr(trim($in['analysis']), 0, 4000), null, now_utc()]);
+        $out['analysis'] = true;
+    }
+    if ($out['snapshot'] || $out['posts']['created'] + $out['posts']['updated'] > 0) {
+        $out['summary_updated'] = insights_update_analysis($brand['id']);
+    }
+    $out['ok'] = !empty($out['analysis']) || $out['snapshot'] || $out['posts']['created'] + $out['posts']['updated'] > 0;
     json_response($out, $out['ok'] ? 200 : 422);
 }
 
@@ -205,6 +214,7 @@ function h_api_insights_get($slug)
     insights_ensure();
     json_response([
         'ok' => true,
+        'notes' => db_all('SELECT source, body, created_at FROM insights_notes WHERE brand_id = ? ORDER BY created_at DESC LIMIT 4', [$brand['id']]),
         'snapshots' => db_all('SELECT day, platform, followers, following, posts, reach, impressions, interactions, profile_visits, source FROM insights_snapshots WHERE brand_id = ? ORDER BY day DESC LIMIT 60', [$brand['id']]),
         'posts' => db_all('SELECT post_ref, posted_at, kind, likes, comments, views, saves, shares, reach, item_id FROM insights_posts WHERE brand_id = ? ORDER BY posted_at DESC LIMIT 100', [$brand['id']]),
     ]);

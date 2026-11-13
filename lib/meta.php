@@ -233,5 +233,6 @@ function meta_refresh_brand($brand)
             }
         }
     }
-    return 'Actualizado: ' . number_format((int) $snap['followers'], 0, ',', '.') . ' seguidores y ' . $n . ' publicaciones.';
+    $newNote = insights_update_analysis($brand['id']);
+    return 'Actualizado: ' . number_format((int) $snap['followers'], 0, ',', '.') . ' seguidores y ' . $n . ' publicaciones.' . ($newNote ? ' Hay un resumen nuevo.' : '');
 }

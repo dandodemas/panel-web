@@ -466,3 +466,9 @@ html[data-theme="dark"] .chart-sentence strong.up{color:#7bd88f}
 .range-form label{display:flex;gap:6px;align-items:center;color:var(--mute)}
 .range-form input{width:70px;background:transparent;border:1px solid var(--rule2);border-radius:999px;padding:5px 12px;font-size:14px;color:var(--ink)}
 .range-form input:focus{outline:none;border-color:var(--ink)}
+.stack{display:grid;gap:20px;align-content:start}
+.note{padding:12px 0;border-top:1px solid var(--rule)}
+.note:first-of-type{border-top:0;padding-top:0}
+.note-label{font-size:13px;color:var(--mute);margin-bottom:6px}
+.note-ia p:last-child{font-size:16px;line-height:1.5}
+.note-list{display:grid;gap:8px;padding-left:18px;font-size:15px;line-height:1.4}
