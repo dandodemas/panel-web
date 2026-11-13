@@ -24,6 +24,7 @@
   var phInput = document.getElementById('ph-input');
   var phAdd = document.getElementById('ph-add');
   var creativeOpen = document.getElementById('creative-open');
+  var creativeDrive = document.getElementById('creative-drive');
   var lightbox = document.getElementById('lightbox');
   var lightboxImg = document.getElementById('lightbox-img');
 
@@ -269,7 +270,26 @@
     var ok = /^https?:\/\/.+/i.test(v);
     creativeOpen.hidden = !ok;
     if (ok) creativeOpen.href = v;
+    // «Traer foto» solo en piezas ya guardadas con un enlace de Drive (el servidor usa el enlace guardado).
+    var it = state.mode === 'edit' ? items[state.id] : null;
+    creativeDrive.hidden = !(it && /^https:\/\/(drive|docs)\.google\.com\//i.test(it.creativeUrl || '') && v === it.creativeUrl);
   }
+
+  creativeDrive.addEventListener('click', function () {
+    var itemId = state.id;
+    creativeDrive.disabled = true;
+    creativeDrive.textContent = 'Trayendo…';
+    DDM.api('/b/' + slug + '/items/' + itemId + '/fotos/drive').then(function (r) {
+      creativeDrive.disabled = false;
+      creativeDrive.textContent = 'Traer foto';
+      if (!r.ok) return DDM.toast(r.error || 'No se ha podido traer la foto.');
+      var photo = r.photos[0];
+      phGrid.appendChild(renderPhoto(photo));
+      state.changed = true;
+      var it = items[itemId];
+      if (it) it.photos.push(photo);
+    });
+  });
   field('creativeUrl').addEventListener('input', syncCreativeLink);
 
   modal.addEventListener('click', function (e) {

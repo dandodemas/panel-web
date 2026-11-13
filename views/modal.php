@@ -51,7 +51,7 @@
       </label>
 
       <label class="field">
-        <span class="field-line"><span>Enlace de la creatividad</span><a class="link" id="creative-open" href="#" target="_blank" rel="noopener noreferrer" hidden>Abrir ↗</a></span>
+        <span class="field-line"><span>Enlace de la creatividad</span><span class="field-links"><button type="button" class="link" id="creative-drive" hidden>Traer foto</button><a class="link" id="creative-open" href="#" target="_blank" rel="noopener noreferrer" hidden>Abrir ↗</a></span></span>
         <input name="creativeUrl" type="url" maxlength="2000" placeholder="https://… (Drive, Canva, Figma…)">
       </label>
 
